@@ -1,0 +1,25 @@
+﻿{
+	"LastProject": "",
+	"DeleteFromSource": "False",
+	"SearchDepth": "2",
+	"LastSearchPath": "",
+	"SearchInterval": "10",
+	"PreviewLineCount": "20",
+	"NoteOpen": "/** TODO",
+	"NoteClose": "*/",
+	"Editor": "",
+    "EditorArgs": "",
+    "FilterTags": "False",
+    "TagFilter": [
+	],
+	"FileTypes": [
+		"c",
+		"cpp",
+		"h",
+		"hpp",
+		"txt"
+	],
+	"PathFilter": [
+	],
+	"UpdateMode": "None"
+}

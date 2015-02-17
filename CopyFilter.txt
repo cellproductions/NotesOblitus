@@ -1,0 +1,6 @@
+.config
+.pdb
+.xml
+.dll
+log
+NotesOblitusAssembly
