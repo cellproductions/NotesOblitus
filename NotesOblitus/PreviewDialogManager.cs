@@ -122,7 +122,7 @@ namespace NotesOblitus
 			ColourAllMatches(textBox, CommentLineRegex.Matches(textBox.Text), CommentColor);
 			ColourAllMatches(textBox, CommentBlockRegex.Matches(textBox.Text), CommentColor);
 
-			var startindex = textBox.Text.IndexOf(note.All, StringComparison.Ordinal);
+			var startindex = textBox.Text.IndexOf(note.All.Replace("\r", ""), StringComparison.Ordinal);
 			if (startindex != -1)
 				SetTextBackColour(textBox, startindex, note.All.Length, Color.DarkGray);
 		}

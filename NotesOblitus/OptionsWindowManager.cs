@@ -93,7 +93,7 @@ namespace NotesOblitus
 			if (dialog.ShowDialog(Owner) != DialogResult.OK)
 				return;
 
-			FilteredPaths = CollectUncheckPaths(root);
+			FilteredPaths = CollectUncheckPaths(root, dialog.GetTotalNodeCount());
 		}
 
 		private void SetupPaths(TreeNode root, int depth, NotesOblitusManager.PathComparer comparer)
@@ -139,12 +139,21 @@ namespace NotesOblitus
 			};
 		}
 
-		private List<string> CollectUncheckPaths(TreeNode root)
+		private static List<string> CollectUncheckPaths(TreeNode root, int totalNodes)
 		{
-			var nodearray = new TreeNode[root.Nodes.Count];
-			root.Nodes.CopyTo(nodearray, 0);
+			var nodes = new List<string>(totalNodes);
+			CollectUnchecked(root, nodes);
+			return nodes;
+		}
 
-			return nodearray.Select(node => node.Tag as string).ToList();
+		private static void CollectUnchecked(TreeNode currentNode, ICollection<string> nodes)
+		{
+			if (!currentNode.Checked)
+				nodes.Add(currentNode.Tag as string);
+			if (currentNode.Nodes.Count <= 0) 
+				return;
+			foreach (var node in currentNode.Nodes)
+				CollectUnchecked(node as TreeNode, nodes);
 		}
 	}
 }

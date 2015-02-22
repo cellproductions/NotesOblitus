@@ -8,11 +8,11 @@ namespace NotesOblitus
 	{
 		public const string LogFile = "log.txt";
 		private static bool _firstLog = true;
-		private static object _logFileLock = new object();
+		private static readonly object LogFileLock = new object();
 
 		public static void Log(string message)
 		{
-			lock (_logFileLock)
+			lock (LogFileLock)
 			{
 				using (var writer = new StreamWriter(LogFile, !_firstLog))
 				{
@@ -26,7 +26,7 @@ namespace NotesOblitus
 
 		public static void Log(Exception e)
 		{
-			lock (_logFileLock)
+			lock (LogFileLock)
 			{
 				using (var writer = new StreamWriter(LogFile, !_firstLog))
 				{

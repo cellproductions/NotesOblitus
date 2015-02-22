@@ -13,12 +13,9 @@ namespace NotesOblitus
 		{
 			InitializeComponent();
 			niMainNotify.Text = GlobalVars.ApplicationTitle + ' ' + GlobalVars.ApplicationVersion;
-			_manager = new NotesOblitusManager(this);
-			var lastsearchpath = _manager.LoadAndSetupOptions(entryPath);
+			_manager = new NotesOblitusManager(this, entryPath);
+			var lastsearchpath = _manager.LoadAndSetupOptions();
 			tbInitialPath.Text = lastsearchpath;
-			_manager.CheckForUpdates(entryPath);
-			_manager.ScanAndCollectNotes();
-			UpdateView();
 		}
 
 		public void UpdateView()
@@ -38,11 +35,19 @@ namespace NotesOblitus
 			niMainNotify.Dispose();
 		}
 
+		private void NotesOblitusApp_Shown(object sender, EventArgs e)
+		{
+			_manager.CheckForUpdates(false, false, false);
+			_manager.ScanAndCollectNotes();
+			UpdateView();
+		}
+
 		private void miFileOpen_Click(object sender, EventArgs e)
 		{
 			var lastsearchpath = _manager.OpenProject();
 			if (lastsearchpath != null)
 				tbInitialPath.Text = lastsearchpath;
+			UpdateView();
 		}
 
 		private void miFileSave_Click(object sender, EventArgs e)
@@ -218,7 +223,7 @@ namespace NotesOblitus
 			_manager.SelectedNote = dgListNotes.CurrentCell == null ? null : (Note)dgListNotes.CurrentCell.OwningRow.Tag;
 		}
 
-		private void dgListNotes_CellContentDoubleClick(object sender, DataGridViewCellEventArgs e)
+		private void dgListNotes_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
 		{
 			_manager.OpenPreviewDialog(dgListNotes);
 		}

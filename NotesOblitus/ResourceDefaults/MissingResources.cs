@@ -16,10 +16,5 @@
 		{
 			return GetDefaultPrj();
 		}
-
-		public static string GetManifestDatAsString()
-		{
-			return GetManifestDat();
-		}
 	}
 }

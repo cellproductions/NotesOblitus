@@ -21,7 +21,7 @@ namespace NotesOblitus
 			}
 			catch (Exception e)
 			{
-				Logger.Log("arg=" + (args.Length > 0 ? args[0] : "null") + '\n' + e);
+				Logger.Log("arg=" + (args.Length > 0 ? args[0] : "null") + Environment.NewLine + e);
 			}
 #endif
 		}

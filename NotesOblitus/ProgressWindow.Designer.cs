@@ -57,7 +57,6 @@
 			this.lProgress.Name = "lProgress";
 			this.lProgress.Size = new System.Drawing.Size(188, 27);
 			this.lProgress.TabIndex = 0;
-			this.lProgress.Text = "Scanning...";
 			this.lProgress.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 			// 
 			// pbProgress
@@ -81,7 +80,7 @@
 			this.ShowIcon = false;
 			this.ShowInTaskbar = false;
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-			this.Text = "Reading Files";
+			this.Text = "ProgressWindow";
 			this.tableLayoutPanel1.ResumeLayout(false);
 			this.tableLayoutPanel1.PerformLayout();
 			this.ResumeLayout(false);

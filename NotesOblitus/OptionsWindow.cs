@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections;
+#if DEBUG
 using System.Diagnostics;
+#endif
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
@@ -15,9 +18,16 @@ namespace NotesOblitus
 			public string NoteClose { get; set; }
 		}
 
+		public class UpdateClickedEventArgs : EventArgs
+		{
+			public bool UpdateFound { get; set; }
+		}
+
 		public delegate void ReplaceClickedEvent(object sender, ReplaceClickedEventArgs args);
+		public delegate void UpdateClickedEvent(object sender, UpdateClickedEventArgs args);
 
 		public event ReplaceClickedEvent ReplaceClicked;
+		public event UpdateClickedEvent UpdateClicked;
 		private readonly OptionsWindowManager _manager;
 
 		public OptionsWindow()
@@ -26,7 +36,7 @@ namespace NotesOblitus
 			_manager = new OptionsWindowManager(this);
 		}
 
-		public void InitialiseSettings(Project defaultOptions, Project project)
+		public void InitialiseSettings(Project defaultOptions, Project project, bool updateAvailable)
 		{
 			_manager.RootSearchPath = project.LastSearchPath;
 			_manager.AcceptedTypes = project.FileTypes;
@@ -40,6 +50,8 @@ namespace NotesOblitus
 			cbGeneralUpdate.SelectedIndex = ValidOption(project.UpdateMode)
 				? (int)UpdateStyle.None.Parse(project.UpdateMode)
 				: (ValidOption(defaultOptions.UpdateMode) ? (int)UpdateStyle.None.Parse(defaultOptions.UpdateMode) : (int)UpdateStyle.None);
+			bGeneralUpdate.Text = updateAvailable ? "Update available" : "No update available";
+			bGeneralUpdate.ForeColor = updateAvailable ? Color.ForestGreen : Color.Firebrick;
 			/** TODO(note) dont forget to change the update status button appropriately. should be disabled if Update is set to None (do not check) */
 
 			// preview
@@ -201,6 +213,20 @@ namespace NotesOblitus
 		{
 			if (ReplaceClicked != null)
 				ReplaceClicked(bGeneralReplace, new ReplaceClickedEventArgs { NoteOpen = tbGeneralStart.Text.Trim(), NoteClose = tbGeneralEnd.Text.Trim() });
+		}
+
+		private void bGeneralCheckUpdate_Click(object sender, EventArgs e)
+		{
+			if (UpdateClicked == null) 
+				return;
+
+			bGeneralCheckUpdate.Enabled = false;
+			var args = new UpdateClickedEventArgs();
+			UpdateClicked(bGeneralCheckUpdate, args);
+			bGeneralCheckUpdate.Enabled = true;
+
+			bGeneralUpdate.Text = args.UpdateFound ? "Update available" : "No update available";
+			bGeneralUpdate.ForeColor = args.UpdateFound ? Color.ForestGreen : Color.Firebrick;
 		}
 
 		private void bPreviewEditor_Click(object sender, EventArgs e)

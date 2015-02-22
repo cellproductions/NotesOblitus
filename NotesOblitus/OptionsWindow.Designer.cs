@@ -31,6 +31,7 @@
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(OptionsWindow));
 			this.tabControl1 = new System.Windows.Forms.TabControl();
 			this.tabPage1 = new System.Windows.Forms.TabPage();
+			this.bGeneralCheckUpdate = new System.Windows.Forms.Button();
 			this.lGeneralSeconds = new System.Windows.Forms.Label();
 			this.bGeneralReplace = new System.Windows.Forms.Button();
 			this.lGeneralEnd = new System.Windows.Forms.Label();
@@ -46,6 +47,7 @@
 			this.lGeneralInterval = new System.Windows.Forms.Label();
 			this.nGeneralInterval = new System.Windows.Forms.NumericUpDown();
 			this.tabPage2 = new System.Windows.Forms.TabPage();
+			this.tbPreviewEditor = new NotesOblitus.Controls.TextBoxPlaceHolder();
 			this.nPreviewLineCount = new System.Windows.Forms.NumericUpDown();
 			this.lPreviewLineCount = new System.Windows.Forms.Label();
 			this.lPreviewMacros = new System.Windows.Forms.Label();
@@ -64,7 +66,6 @@
 			this.cbFiltersTypes = new System.Windows.Forms.ComboBox();
 			this.bFiltersRemoveType = new System.Windows.Forms.Button();
 			this.bFiltersAddType = new System.Windows.Forms.Button();
-			this.tbPreviewEditor = new NotesOblitus.Controls.TextBoxPlaceHolder();
 			this.tabControl1.SuspendLayout();
 			this.tabPage1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.nGeneralDepth)).BeginInit();
@@ -88,6 +89,7 @@
 			// 
 			// tabPage1
 			// 
+			this.tabPage1.Controls.Add(this.bGeneralCheckUpdate);
 			this.tabPage1.Controls.Add(this.lGeneralSeconds);
 			this.tabPage1.Controls.Add(this.bGeneralReplace);
 			this.tabPage1.Controls.Add(this.lGeneralEnd);
@@ -109,6 +111,17 @@
 			this.tabPage1.TabIndex = 0;
 			this.tabPage1.Text = "General";
 			this.tabPage1.UseVisualStyleBackColor = true;
+			// 
+			// bGeneralCheckUpdate
+			// 
+			this.bGeneralCheckUpdate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.bGeneralCheckUpdate.Location = new System.Drawing.Point(6, 207);
+			this.bGeneralCheckUpdate.Name = "bGeneralCheckUpdate";
+			this.bGeneralCheckUpdate.Size = new System.Drawing.Size(129, 23);
+			this.bGeneralCheckUpdate.TabIndex = 28;
+			this.bGeneralCheckUpdate.Text = "Check for updates";
+			this.bGeneralCheckUpdate.UseVisualStyleBackColor = true;
+			this.bGeneralCheckUpdate.Click += new System.EventHandler(this.bGeneralCheckUpdate_Click);
 			// 
 			// lGeneralSeconds
 			// 
@@ -172,7 +185,6 @@
 			this.cbGeneralUpdate.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.cbGeneralUpdate.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-			this.cbGeneralUpdate.Enabled = false;
 			this.cbGeneralUpdate.FormattingEnabled = true;
 			this.cbGeneralUpdate.Items.AddRange(new object[] {
             "Automatically update",
@@ -187,13 +199,13 @@
 			// 
 			this.bGeneralUpdate.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.bGeneralUpdate.Enabled = false;
-			this.bGeneralUpdate.ForeColor = System.Drawing.Color.ForestGreen;
-			this.bGeneralUpdate.Location = new System.Drawing.Point(6, 207);
+			this.bGeneralUpdate.CausesValidation = false;
+			this.bGeneralUpdate.ForeColor = System.Drawing.Color.Firebrick;
+			this.bGeneralUpdate.Location = new System.Drawing.Point(141, 207);
 			this.bGeneralUpdate.Name = "bGeneralUpdate";
-			this.bGeneralUpdate.Size = new System.Drawing.Size(264, 23);
+			this.bGeneralUpdate.Size = new System.Drawing.Size(129, 23);
 			this.bGeneralUpdate.TabIndex = 20;
-			this.bGeneralUpdate.Text = "No update available.";
+			this.bGeneralUpdate.Text = "No update available";
 			this.bGeneralUpdate.UseVisualStyleBackColor = true;
 			// 
 			// lGeneralDelete
@@ -302,6 +314,14 @@
 			this.tabPage2.TabIndex = 1;
 			this.tabPage2.Text = "Preview";
 			this.tabPage2.UseVisualStyleBackColor = true;
+			// 
+			// tbPreviewEditor
+			// 
+			this.tbPreviewEditor.Location = new System.Drawing.Point(6, 37);
+			this.tbPreviewEditor.Name = "tbPreviewEditor";
+			this.tbPreviewEditor.PlaceHolder = "Editor executable path";
+			this.tbPreviewEditor.Size = new System.Drawing.Size(264, 20);
+			this.tbPreviewEditor.TabIndex = 33;
 			// 
 			// nPreviewLineCount
 			// 
@@ -524,14 +544,6 @@
 			this.bFiltersAddType.UseVisualStyleBackColor = true;
 			this.bFiltersAddType.Click += new System.EventHandler(this.bFiltersAddType_Click);
 			// 
-			// tbPreviewEditor
-			// 
-			this.tbPreviewEditor.Location = new System.Drawing.Point(6, 37);
-			this.tbPreviewEditor.Name = "tbPreviewEditor";
-			this.tbPreviewEditor.PlaceHolder = "Editor executable path";
-			this.tbPreviewEditor.Size = new System.Drawing.Size(264, 20);
-			this.tbPreviewEditor.TabIndex = 33;
-			// 
 			// OptionsWindow
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -595,5 +607,6 @@
 		private System.Windows.Forms.Button bFiltersAddType;
 		private System.Windows.Forms.Label lGeneralSeconds;
 		private Controls.TextBoxPlaceHolder tbPreviewEditor;
+		private System.Windows.Forms.Button bGeneralCheckUpdate;
 	}
 }

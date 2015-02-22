@@ -14,7 +14,7 @@ using Timer = System.Timers.Timer;
 
 namespace NotesOblitus
 {
-	class NotesOblitusManager /** TODO(bug) preview's back colour for selected notes doesnt work in some cases */
+	class NotesOblitusManager
 	{
 		// Filesystem paths are more likely to be different starting from the end of their strings.
 		public class PathComparer : IEqualityComparer<string>
@@ -25,12 +25,9 @@ namespace NotesOblitus
 				if (length != y.Length)
 					return false;
 
-				while (length >= 0)
-				{
+				while (--length >= 0)
 					if (x[length] != y[length])
 						return false;
-					--length;
-				}
 				return true;
 			}
 
@@ -46,12 +43,18 @@ namespace NotesOblitus
 			public DirectoryStatistic DirectoryData { get; set; }
 		}
 
+		private class SearchPath
+		{
+			public string Path { get; set; }
+			public int Depth { get; set; }
+		}
+
 		public const string SyntaxFileName = "syntax.json";
 		public static readonly string ProjectDirectory = Application.StartupPath + "\\Projects";
 		public static readonly string HelpDirectory = Application.StartupPath + "\\Help";
 		private const string LicenseFileName = "license.txt";
 		private const string HelpIndexFileName = "index.html";
-		private const string DefaultPrjFileName = "default.prj";
+		private const string DefaultPrjFileName = "default.ctdprj";
 		private const string ProjectExtension = ".ctdprj";
 
 		public NotesOblitusApp Owner { get; internal set; }
@@ -62,17 +65,21 @@ namespace NotesOblitus
 		public bool AutoScan { get; internal set; }
 		public bool IsScanning { get; internal set; }
 		public bool IsUpdatingView { get; internal set; }
+		public string EntryArgs { get; internal set; }
 		private readonly List<Note> _notes = new List<Note>();
 		private readonly HashSet<string> _tags = new HashSet<string>();
 		private readonly StatisticsData _allStatisticsData = new StatisticsData();
 		private bool _defaultPrjLoaded = true;
 		private readonly object _autoLock = new object();
 		private readonly Timer _autoTimer = new Timer();
+		private Thread _updateThread; // this thread is kept alive on close so it can finish the update
+		private bool _updateAvailable;
 
-		public NotesOblitusManager(NotesOblitusApp owner) /** TODO(change) should add default constants for some options, then replace those values */
+		public NotesOblitusManager(NotesOblitusApp owner, string entryArgs) /** TODO(change) should add default constants for some options, then replace those values */
 		{
 			Owner = owner;
 			CurrentViewMode = ViewMode.ListView;
+			EntryArgs = entryArgs;
 			_autoTimer.Elapsed += (sender, args) =>
 			{
 				if (!AutoScan)
@@ -109,8 +116,6 @@ namespace NotesOblitus
 				File.WriteAllText(SyntaxFileName, MissingResources.GetSyntaxFileAsString());
 			if (!File.Exists(DefaultPrjFileName))
 				File.WriteAllText(DefaultPrjFileName, MissingResources.GetDefaultPrjAsString());
-			//if (!File.Exists(GlobalVars.ManifestFileName))
-			//	File.WriteAllText(GlobalVars.ManifestFileName, MissingResources.GetManifestDatAsString()); /** TODO(refactor) dont actually need a local manifest file */
 		}
 
 		private static OpenMode ParseArg(ref string entryPath)
@@ -133,11 +138,12 @@ namespace NotesOblitus
 			return File.Exists(entryPath) ? OpenMode.FromProject : OpenMode.Invalid;
 		}
 
-		public string LoadAndSetupOptions(string entryPath)
+		public string LoadAndSetupOptions()
 		{
 			CreateDefaultPaths();
 			DefaultProject = JsonConvert.DeserializeObject<DefaultProject>(File.ReadAllText(DefaultPrjFileName));
 
+			var entryPath = EntryArgs;
 			var openmode = ParseArg(ref entryPath);
 			switch (openmode)
 			{
@@ -158,7 +164,7 @@ namespace NotesOblitus
 					{
 						if (!string.IsNullOrEmpty(DefaultProject.LastProject) && File.Exists(DefaultProject.LastProject))
 						{
-							CurrentProject = JsonConvert.DeserializeObject<Project>(File.ReadAllText(entryPath));
+							CurrentProject = JsonConvert.DeserializeObject<Project>(File.ReadAllText(DefaultProject.LastProject));
 							_defaultPrjLoaded = false;
 						}
 						else
@@ -180,36 +186,70 @@ namespace NotesOblitus
 			if (_defaultPrjLoaded) 
 				return CurrentProject.LastSearchPath;
 
-			Owner.Text += @" - " + GetFileName(DefaultProject.LastProject);
+			Owner.Text += @" - " + GetFolderName(DefaultProject.LastProject);
 
 			return CurrentProject.LastSearchPath;
 		}
 
-		public void CheckForUpdates(string restartArgs)
+		public void CheckForUpdates(bool manualCheck, bool notify, bool wait)
 		{
 			/** TODO(incomplete) this should be done on another thread. if the mode is set to none, dont check. otherwise, ask or auto update (still on another thread) */
-			if (String.IsNullOrEmpty(CurrentProject.UpdateMode))
+			if (!manualCheck && String.IsNullOrEmpty(CurrentProject.UpdateMode))
 			{
 				CurrentProject.UpdateMode = UpdateStyle.None.ToString();
 				return;
 			}
-			var update = UpdateStyle.None.Parse(CurrentProject.UpdateMode);
-			if (update == UpdateStyle.None)
-				return;
 
+			if (_updateThread != null && _updateThread.IsAlive)
+				_updateThread.Abort(); // destroy the process and start again
+			_updateThread = new Thread(RunUpdater);
+			_updateThread.Start(new object[] { manualCheck, notify });
+			if (wait)
+				_updateThread.Join();
+		}
+
+		private void RunUpdater(object param)
+		{
 			try
 			{
+				var manualcheck = (bool)((object[])param)[0];
+				var notify = (bool)((object[])param)[1];
+
+				var update = UpdateStyle.None.Parse(CurrentProject.UpdateMode);
+				if (!manualcheck && update == UpdateStyle.None)
+					return;
+
 				var updater = new Updater("https://dl.dropboxusercontent.com/u/28551411/NotesOblitus/"); /** TODO(change) this path should be hashed */
 				Dictionary<string, Version> newversions;
 				var updates = updater.AreUpdatesAvailable(Version.Parse(GlobalVars.ApplicationVersion), out newversions);
-				if (!updates["Application"]) /** TODO(incomplete) if the patcher needs updating, request a manual download */
+				if (!updates["Application"]) /** TODO(incomplete) if the patcher/manifest needs updating, request a manual download */
+				{
+					if (notify)
+						MessageBox.Show(Owner, @"There are no updates available.", @"Update", MessageBoxButtons.OK, MessageBoxIcon.Information);
 					return;
-				if (update == UpdateStyle.Notify)
+				}
+
+				if (manualcheck)
 				{
 					if (MessageBox.Show(Owner, @"A new update is available (version " + newversions["Application"] +
-						@"). Would you like to update now (this will restart the application)?", @"Update Available", MessageBoxButtons.YesNo, MessageBoxIcon.Information)
-						!= DialogResult.Yes)
+					                           @"). Would you like to update now (this will restart the application)?",
+						@"Update Available", MessageBoxButtons.YesNo, MessageBoxIcon.Information)
+					    != DialogResult.Yes)
+					{
+						_updateAvailable = true;
 						return;
+					}
+				}
+				else if (update == UpdateStyle.Notify)
+				{
+					if (MessageBox.Show(Owner, @"A new update is available (version " + newversions["Application"] +
+											   @"). Would you like to update now (this will restart the application)?",
+						@"Update Available", MessageBoxButtons.YesNo, MessageBoxIcon.Information)
+						!= DialogResult.Yes)
+					{
+						_updateAvailable = true;
+						return;
+					}
 				}
 
 				const string patcherFileName = "Patcher.exe"; /** TODO(change) .exe name might change, so might have to use a GUID or something */
@@ -231,33 +271,58 @@ namespace NotesOblitus
 					Directory.CreateDirectory(temppath);
 				else
 				{
-					foreach (var filepath in Directory.GetFiles(temppath, "*", SearchOption.AllDirectories))
-						File.Delete(filepath);
-					foreach (var dirpath in Directory.GetDirectories(temppath, "*", SearchOption.AllDirectories))
-						Directory.Delete(dirpath);
+					var directory = new DirectoryInfo(temppath);
+					foreach (var file in directory.GetFiles("*", SearchOption.AllDirectories))
+						file.Delete();
+					foreach (var dir in directory.GetDirectories())
+						dir.Delete(true);
 				}
+
+				var progresswindow = new ProgressWindow
+				{
+					Text = @"Updating",
+					ProgressStatus = "Downloading files %val/%max"
+				};
+				updater.DownloadsStarted += (sender, args) =>
+				{
+					progresswindow.Show(Owner);
+					progresswindow.StartProgress(args.FileCount);
+					progresswindow.Update();
+				};
+				updater.DownloadComplete += (sender, args) =>
+				{
+					progresswindow.IncrementProgress();
+				};
+
 				updater.DownloadUpdate(temppath);
+
+				progresswindow.Close();
 
 				Owner.FormClosed += (sender, args) =>
 				{
-					Process.Start(Application.StartupPath + '\\' + patcherFileName, 
-						'"' + Application.StartupPath + "\" \"" + 
-						temppath + "\" " + 
-						GlobalVars.ApplicationExeName + " \"" + 
-						restartArgs + '"');
+					var process = new ProcessStartInfo(Application.StartupPath + '\\' + patcherFileName,
+						'"' + Application.StartupPath + "\" \"" +
+						temppath + "\" " +
+						GlobalVars.ApplicationExeName + " \"" +
+						EntryArgs + '"')
+					{
+						UseShellExecute = true
+					};
+					Process.Start(process);
 				};
-				_defaultPrjLoaded = false; // this will stop this instance of the app from saving the default settings (will get saved on restart)
+				_defaultPrjLoaded = false;
+				// this will stop this instance of the app from saving the default settings (will get saved on restart)
 				ExitApplication();
 			}
 			catch (Exception e)
 			{
-				MessageBox.Show(Owner, @"An exception was encounted while updating!\n" + e, @"Update Error", MessageBoxButtons.OK,
+				MessageBox.Show(Owner, @"An exception was encounted while updating!" + Environment.NewLine + e, @"Update Error", MessageBoxButtons.OK,
 						MessageBoxIcon.Exclamation);
 				Logger.Log(e);
 			}
 		}
 
-		public string OpenProject() /** TODO(bug) doesnt scan+collect once the project has been opened */
+		public string OpenProject()
 		{
 			var dialog = new OpenFileDialog
 			{
@@ -274,7 +339,7 @@ namespace NotesOblitus
 			DefaultProject.LastProject = dialog.FileName;
 			CurrentProject = JsonConvert.DeserializeObject<Project>(File.ReadAllText(DefaultProject.LastProject));
 			_defaultPrjLoaded = false;
-			Owner.Text = GlobalVars.ApplicationTitle + ' ' + GlobalVars.ApplicationVersion + @" - " + GetFileName(DefaultProject.LastProject);
+			Owner.Text = GlobalVars.ApplicationTitle + ' ' + GlobalVars.ApplicationVersion + @" - " + GetFolderName(DefaultProject.LastProject);
 
 			ResetAutoTimer();
 
@@ -309,7 +374,7 @@ namespace NotesOblitus
 				return;
 
 			DefaultProject.LastProject = dialog.FileName;
-			Owner.Text = GlobalVars.ApplicationTitle + ' ' + GlobalVars.ApplicationVersion + @" - " + GetFileName(DefaultProject.LastProject); /** TODO(bug) doesnt show full name (only shows extension) */
+			Owner.Text = GlobalVars.ApplicationTitle + ' ' + GlobalVars.ApplicationVersion + @" - " + GetFolderName(DefaultProject.LastProject);
 			_defaultPrjLoaded = false;
 			WriteProject(SaveMode.ProjectOnly);
 		}
@@ -369,6 +434,12 @@ namespace NotesOblitus
 
 		private void ResetAutoTimer()
 		{
+			if (_autoTimer == null)
+				throw new Exception("_autoTimer");
+			if (CurrentProject == null)
+				throw new Exception("CurrentProject");
+			if (CurrentProject.SearchInterval == null)
+				throw new Exception("SearchInterval");
 			int interval;
 			if (!Int32.TryParse(CurrentProject.SearchInterval, out interval))
 				interval = 10;
@@ -392,8 +463,7 @@ namespace NotesOblitus
 			if (_autoTimer.Enabled)
 				_autoTimer.Stop();
 
-			if (_defaultPrjLoaded)
-				WriteProject(SaveMode.DefaultOnly);
+			WriteProject(SaveMode.DefaultOnly); /** TODO(note) not sure if this should do this every time */
 
 			if (Application.OpenForms.OfType<NotesOblitusApp>().Any())
 				Owner.Close();
@@ -410,9 +480,9 @@ namespace NotesOblitus
 		public List<FileInfo> GetScannableFilePaths(string startPathName)
 		{
 			var searchfiles = new List<FileInfo>();
-			var currdepth = 0;
+			var currdepth = 1;
 			var searchdepth = Int32.Parse(CurrentProject.SearchDepth);
-			var paths = new List<string>(1) { CurrentProject.LastSearchPath };
+			var paths = new List<SearchPath>(1) { new SearchPath { Path = CurrentProject.LastSearchPath, Depth = currdepth } };
 			var fileTypes = new List<string>(CurrentProject.FileTypes == null ? 1 : CurrentProject.FileTypes.Length);
 			if (CurrentProject.FileTypes != null)
 				fileTypes.AddRange(CurrentProject.FileTypes.Select(filetype => '.' + filetype));
@@ -422,33 +492,30 @@ namespace NotesOblitus
 				var currpath = paths[0];
 				paths.RemoveAt(0);
 
-				if (currdepth > searchdepth) /** TODO(bug) this search depth doesnt work */
+				if (currpath.Depth > searchdepth)
 					continue;
+				currdepth = currpath.Depth;
 
-				if (!Directory.Exists(currpath))
+				if (!Directory.Exists(currpath.Path))
 				{
-					MessageBox.Show(Owner, @"Path " + currpath + @" was not found!", @"Whoops!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+					MessageBox.Show(Owner, @"Path " + currpath.Path + @" was not found!", @"Search Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
 					continue;
 				}
 
-				if (IsDirectoryFiltered(currpath))
+				if (IsDirectoryFiltered(currpath.Path))
 					continue;
 
-				var subdirs = Directory.GetDirectories(currpath);
-					
-				if (subdirs.Length > 0)
-					++currdepth;
-				if (currdepth >= searchdepth)
-					continue;
-				paths.AddRange(subdirs);
-				
+				var subdirs = Directory.GetDirectories(currpath.Path);
+				if (subdirs.Length > 0 && currdepth < searchdepth)
+					paths.AddRange(subdirs.Select(subdir => new SearchPath { Path = subdir, Depth = currdepth + 1 }));
+
 				var dirStatistic = new DirectoryStatistic
 				{
-					DirectoryName = currpath.Substring(currpath.LastIndexOf(startPathName, StringComparison.Ordinal))
+					DirectoryName = currpath.Path.Substring(currpath.Path.LastIndexOf(startPathName, StringComparison.Ordinal))
 				};
 				_allStatisticsData.DirectoryStatistics.Add(dirStatistic);
 
-				var fileEnumerable = (from filepath in Directory.GetFiles(currpath)
+				var fileEnumerable = (from filepath in Directory.GetFiles(currpath.Path)
 									  where !IsFileFiltered(filepath, fileTypes)
 									  select 
 									  new FileInfo { FilePath = filepath, DirectoryData = dirStatistic });
@@ -456,9 +523,6 @@ namespace NotesOblitus
 				dirStatistic.FileCount = fileInfos.Length; /** TODO(note) should this be the number of files with notes in them or the total number of files? */
 
 				searchfiles.AddRange(fileInfos);
-
-				if (subdirs.Length <= 0 || currdepth == searchdepth)
-					--currdepth;
 			}
 
 			return searchfiles;
@@ -499,7 +563,12 @@ namespace NotesOblitus
 				ProgressWindow progresswindow = null;
 				if (showProgress)
 				{
-					progresswindow = new ProgressWindow();
+					progresswindow = new ProgressWindow
+					{
+						Text = @"Reading Files",
+						InitialStatus = @"Scanning...",
+						ProgressStatus = @"Reading %val/%max files..."
+					};
 					progresswindow.Show(Owner);
 					progresswindow.Update();
 				}
@@ -532,7 +601,7 @@ namespace NotesOblitus
 			return index >= 0 && index + 1 < path.Length ? path.Substring(index + 1) : path;
 		}
 
-		public static string GetFileName(string path)
+		public static string GetFileExtension(string path)
 		{
 			var index = path.LastIndexOf('.');
 			return index >= 0 && index + 1 < path.Length ? path.Substring(index + 1) : path;
@@ -671,6 +740,12 @@ namespace NotesOblitus
 					var listView = currentViewControl as DataGridView;
 #if DEBUG
 					Debug.Assert(listView != null);
+#else
+					if (listView == null)
+					{
+						IsUpdatingView = false;
+						return;
+					}
 #endif
 					listView.Rows.Clear();
 
@@ -696,21 +771,28 @@ namespace NotesOblitus
 					var treeView = currentViewControl as TreeView;
 #if DEBUG
 					Debug.Assert(treeView != null);
+#else
+					if (treeView == null)
+					{
+						IsUpdatingView = false;
+						return;
+					}
 #endif
+					var startindex = CurrentProject.LastSearchPath.Length + 1; // + 1 to skip the last backslash
 					treeView.Nodes.Clear();
-					treeView.Nodes.Add(CurrentProject.LastSearchPath);
+					treeView.Nodes.Add(GetFolderName(CurrentProject.LastSearchPath));
 					var curr = treeView.Nodes[0];
 					curr.ToolTipText = @"Found: " + _notes.Count;
 
 					if (filterTags)
 					{
 						foreach (var note in _notes.Where(note => !CurrentProject.TagFilter.Contains(note.Tag)))
-							AddToTree(treeView, note, curr);
+							AddToTree(note, curr, startindex);
 					}
 					else
 					{
 						foreach (var note in _notes)
-							AddToTree(treeView, note, curr);
+							AddToTree(note, curr, startindex);
 					}
 
 					treeView.ExpandAll();
@@ -739,57 +821,34 @@ namespace NotesOblitus
 			view.Rows.Add(note.FileName, note.Line, note.Tag.ToUpper(), note.Message);
 			view.Rows[view.Rows.Count - 1].Tag = note;
 		}
-		/** TODO(change)
-		 * this should really do something more along the lines of
-		 *	- rootdir
-		 *		- subdir
-		 *			- file
-		 *				* note1
-		 *				* note2
-		 *			- file
-		 *				* note3
-		 *		- subdir
-		 * etc.
-		 */
-		private static void AddToTree(TreeView view, Note note, TreeNode currNode)
+
+		private static void AddToTree(Note note, TreeNode currNode, int startPathIndex) /** TODO(note) maybe there could be some colour coding for this */
 		{
-			var path = note.FilePath.Substring(0, note.FilePath.LastIndexOf('\\'));
-			if (String.Compare(path, currNode.Text, StringComparison.Ordinal) == 0)
+			var path = note.FilePath.Substring(startPathIndex);
+			var splitpath = path.Split('\\');
+			foreach (var t in splitpath)
 			{
-				var node = new TreeNode(note.FilePath.Substring(path.Length + 1));
-				node.Text += @" (line " + note.Line + @") ";
-				node.Text += note.Tag.Length > 0 ? ("[" + note.Tag + "]") : "";
-				node.ToolTipText = note.Message;
-				node.Tag = note;
+				var oldnode = currNode;
+				var pathname = t;
+				foreach (var child in currNode.Nodes.Cast<object>().Where(child => ((TreeNode)child).Text == pathname))
+				{
+					currNode = (TreeNode)child;
+					break;
+				}
+				if (oldnode != currNode) 
+					continue;
+				var node = new TreeNode(t); // if there wasnt a folder with that name, then its the first and should be created
 				currNode.Nodes.Add(node);
-				currNode.ToolTipText = @"Found: " + currNode.Nodes.Count;
+				currNode = node;
 			}
-			else /** TODO(bug) dir nodes display the full path instead of the truncated path */
+
+			var notenode = new TreeNode(note.Message)
 			{
-				if (path.Contains(currNode.Text))
-				{
-					var node = new TreeNode(path);
-					currNode.Nodes.Add(node);
-					currNode = node;
-					node = new TreeNode(note.FilePath.Substring(path.Length + 1));
-					node.Text += @" (line " + note.Line + @") ";
-					node.Text += note.Tag.Length > 0 ? ("[" + note.Tag + "]") : "";
-					node.ToolTipText = note.Message;
-					node.Tag = note;
-					currNode.Nodes.Add(node);
-					currNode.ToolTipText = @"Found: " + currNode.Nodes.Count;
-				}
-				else /** TODO(bug) THIS PART IS COMPLETELY WRONG AND BUGGED. REPAIR */
-				{
-					var found = false;
-					while (currNode != view.Nodes[0] && !found)
-					{
-						currNode = currNode.Parent;
-						if (currNode.Nodes.Cast<TreeNode>().Any(node => String.Compare(path, node.Text, StringComparison.Ordinal) == 0))
-							found = true;
-					}
-				}
-			}
+				ToolTipText = "(line " + note.Line + ")" + (note.Tag.Length > 0 ? (" [" + note.Tag + "]") : ""),
+				Tag = note
+			};
+			currNode.Nodes.Add(notenode);
+			currNode.ToolTipText = "Found: " + currNode.Nodes.Count;
 		}
 
 		public void OpenPreviewDialog(Control currentView)
@@ -826,7 +885,11 @@ namespace NotesOblitus
 			args = args.Replace("%p", SelectedNote.FilePath);
 			args = args.Replace("%t", SelectedNote.Tag);
 			args = args.Replace("%m", SelectedNote.Message);
-			Process.Start(CurrentProject.Editor, args);
+			var process = new ProcessStartInfo(CurrentProject.Editor, args)
+			{
+				UseShellExecute = true
+			};
+			Process.Start(process);
 		}
 
 		public void RemoveNoteFromSource(Control currentView)
@@ -880,7 +943,7 @@ namespace NotesOblitus
 		public void DisplayOptionsWindow()
 		{
 			var optionswindow = new OptionsWindow();
-			optionswindow.InitialiseSettings(DefaultProject, CurrentProject);
+			optionswindow.InitialiseSettings(DefaultProject, CurrentProject, _updateAvailable);
 			optionswindow.ReplaceClicked += (sender, args) =>
 			{
 				var dialog = new ReplaceNotesDialog();
@@ -908,6 +971,11 @@ namespace NotesOblitus
 				}
 
 				ReplaceOldNotes(oldStart, oldEnd, newStart, newEnd);
+			};
+			optionswindow.UpdateClicked += (sender, args) =>
+			{
+				CheckForUpdates(true, true, true);
+				args.UpdateFound = _updateAvailable;
 			};
 			optionswindow.Closed += (sender, args) =>
 			{

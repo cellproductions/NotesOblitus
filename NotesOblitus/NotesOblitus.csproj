@@ -120,7 +120,6 @@
     </Compile>
     <Compile Include="ResourceDefaults\DefaultPrjResource.cs" />
     <Compile Include="ResourceDefaults\LicenseTxtResource.cs" />
-    <Compile Include="ResourceDefaults\ManifestDatResource.cs" />
     <Compile Include="ResourceDefaults\MissingResources.cs" />
     <Compile Include="Note.cs" />
     <Compile Include="NotesOblitusApp.cs">
@@ -195,8 +194,8 @@
     <EmbeddedResource Include="StatisticsDialog.resx">
       <DependentUpon>StatisticsDialog.cs</DependentUpon>
     </EmbeddedResource>
-    <None Include="default.prj">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <None Include="default.ctdprj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
@@ -235,6 +234,7 @@
     <Content Include="license.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="NOTES.txt" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

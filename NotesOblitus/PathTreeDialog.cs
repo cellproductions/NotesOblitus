@@ -11,5 +11,10 @@ namespace NotesOblitus
 			InitializeComponent();
 			Shown += (sender, args) => { if (RootNode != null) tvPaths.Nodes.Add(RootNode); };
 		}
+
+		public int GetTotalNodeCount()
+		{
+			return tvPaths.GetNodeCount(true);
+		}
 	}
 }

@@ -1,4 +1,6 @@
-﻿using NotesOblitus.Controls;
+﻿using System;
+using System.Security.AccessControl;
+using NotesOblitus.Controls;
 
 namespace NotesOblitus
 {
@@ -396,7 +398,7 @@ namespace NotesOblitus
 			this.dgListNotes.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
 			this.dgListNotes.Size = new System.Drawing.Size(770, 481);
 			this.dgListNotes.TabIndex = 0;
-			this.dgListNotes.CellContentDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgListNotes_CellContentDoubleClick);
+			this.dgListNotes.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgListNotes_CellDoubleClick);
 			this.dgListNotes.SelectionChanged += new System.EventHandler(this.dgListNotes_SelectionChanged);
 			// 
 			// cFile
@@ -440,6 +442,7 @@ namespace NotesOblitus
 			this.tvListNotes.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.tvListNotes.Location = new System.Drawing.Point(0, 0);
 			this.tvListNotes.Name = "tvListNotes";
+			this.tvListNotes.ShowNodeToolTips = true;
 			this.tvListNotes.Size = new System.Drawing.Size(770, 481);
 			this.tvListNotes.TabIndex = 0;
 			this.tvListNotes.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.tvListNotes_AfterSelect);
@@ -491,11 +494,13 @@ namespace NotesOblitus
 			this.ClientSize = new System.Drawing.Size(784, 562);
 			this.Controls.Add(this.tableLayoutPanel1);
 			this.Controls.Add(this.msMainMenu);
+			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.MainMenuStrip = this.msMainMenu;
 			this.Name = "NotesOblitusApp";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
 			this.Text = "Notes Oblitus";
 			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.NotesOblitusApp_FormClosed);
+			this.Shown += new System.EventHandler(this.NotesOblitusApp_Shown);
 			this.VisibleChanged += new System.EventHandler(this.NotesOblitusApp_VisibleChanged);
 			this.msMainMenu.ResumeLayout(false);
 			this.msMainMenu.PerformLayout();
