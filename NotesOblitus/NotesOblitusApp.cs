@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
 using Global;
 using NotesOblitus.Exporters;
@@ -223,6 +224,18 @@ namespace NotesOblitus
 			_manager.SelectedNote = dgListNotes.CurrentCell == null ? null : (Note)dgListNotes.CurrentCell.OwningRow.Tag;
 		}
 
+		private void dgListNotes_CellMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+		{
+			if (e.Button != MouseButtons.Right)
+				return;
+			dgListNotes.CurrentCell = dgListNotes.Rows[e.RowIndex].Cells[e.ColumnIndex];
+			dgListNotes.Rows[e.RowIndex].Selected = true;
+			_manager.SelectedNote = (Note)dgListNotes.Rows[e.RowIndex].Tag;
+
+			var cellloc = dgListNotes.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, false).Location;
+			ShowViewMenu(dgListNotes.PointToScreen(new Point(cellloc.X + e.Location.X, cellloc.Y + e.Location.Y)));
+		}
+
 		private void dgListNotes_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
 		{
 			_manager.OpenPreviewDialog(dgListNotes);
@@ -233,6 +246,15 @@ namespace NotesOblitus
 			if (_manager.CurrentViewMode != ViewMode.TreeView)
 				return;
 			_manager.SelectedNote = tvListNotes.SelectedNode == null ? null : (Note)tvListNotes.SelectedNode.Tag;
+		}
+
+		private void tvListNotes_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
+		{
+			if (e.Button != MouseButtons.Right)
+				return;
+
+			tvListNotes.SelectedNode = e.Node;
+			ShowViewMenu(tvListNotes.PointToScreen(e.Location));
 		}
 
 		private void tvListNotes_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
@@ -264,6 +286,24 @@ namespace NotesOblitus
 		private void miNotifyExit_Click(object sender, EventArgs e)
 		{
 			Close();
+		}
+
+		private void ShowViewMenu(Point location)
+		{
+			var menu = new ContextMenuStrip();
+			var previewItem = new ToolStripMenuItem("Preview");
+			var editItem = new ToolStripMenuItem("Edit");
+			var deleteItem = new ToolStripMenuItem("Delete");
+
+			previewItem.Click += miEditPreview_Click;
+			editItem.Click += miEditEdit_Click;
+			deleteItem.Click += miEditDelete_Click;
+
+			menu.Items.Add(previewItem);
+			menu.Items.Add(editItem);
+			menu.Items.Add(deleteItem);
+
+			menu.Show(location);
 		}
 	}
 }

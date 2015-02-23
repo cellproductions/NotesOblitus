@@ -1,20 +1,18 @@
 TODO:
 - finish the Help menu item
-- add syntax saving/loading/editing for the preview window (colours, fonts, background/foreground/etc colours)
+- add syntax saving/loading/editing for the preview window (colours, fonts, background/foreground/etc colours) (should probs be per project as well)
 - add some way to specify descriptions for tags
 - add method of minimizing the number of notes in the different modes by gathering notes with multiple tags into single notes
-- add rightclick options to tick/untick all child nodes
-- add rightclick options to notes in the views to delete/preview/edit
 - add priority options for tags (they can be coloured in the main view as well)
 - links to sites or whatever (sensitive stuff) should be md5 hashed
+- create a status bar or something that tells the user when they have saved, etc.
 
 - mention version details in the help
-- add changelog to the Help section
-- add the license to the About section (could also place it in the help section as well)
-- update version number (in GlobalVars, until the auto updater is finished)
+- add changelog + license to the Help section
+- update major/minor version numbers in GlobalVars
 
 BUGS:
-- preview doesnt catch all syntax cases (numbers starting with 0x, or some cases involving notes)
+- preview doesnt catch all syntax cases (numbers starting with 0x, or some cases involving notes, not to mention some from other languages. should simplify it)
 
 TEST:
 

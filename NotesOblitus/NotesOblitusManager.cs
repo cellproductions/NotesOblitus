@@ -54,8 +54,8 @@ namespace NotesOblitus
 		public static readonly string HelpDirectory = Application.StartupPath + "\\Help";
 		private const string LicenseFileName = "license.txt";
 		private const string HelpIndexFileName = "index.html";
-		private const string DefaultPrjFileName = "default.ctdprj";
-		private const string ProjectExtension = ".ctdprj";
+		private const string DefaultPrjFileName = "default.noprj";
+		private const string ProjectExtension = ".noprj";
 
 		public NotesOblitusApp Owner { get; internal set; }
 		public ViewMode CurrentViewMode { get; set; }
@@ -148,7 +148,7 @@ namespace NotesOblitus
 			switch (openmode)
 			{
 				case OpenMode.FromPath:
-					DefaultProject.LastSearchPath = DefaultPrjFileName;
+					DefaultProject.LastSearchPath = entryPath;
 					CurrentProject = DefaultProject;
 					break;
 				case OpenMode.FromProject:
@@ -156,9 +156,10 @@ namespace NotesOblitus
 					_defaultPrjLoaded = false;
 					break;
 				case OpenMode.Invalid:
+					CurrentProject = DefaultProject;
 					if (entryPath.Length > 0) // something went wrong
 						MessageBox.Show(Owner,
-							@"Failed to load project from argument! Make sure that the path exists before trying again.\n" + entryPath,
+							@"Failed to load project from argument! Make sure that the path exists before trying again." + Environment.NewLine + entryPath,
 							@"Project Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 					else // default load (loading without args)
 					{
@@ -168,10 +169,7 @@ namespace NotesOblitus
 							_defaultPrjLoaded = false;
 						}
 						else
-						{
 							DefaultProject.LastProject = ""; // something was wrong with the last project (or it was empty), so clear it
-							CurrentProject = DefaultProject;
-						}
 					}
 					break;
 				default:
@@ -994,7 +992,8 @@ namespace NotesOblitus
 
 		private void ReplaceOldNotes(string oldStart, string oldEnd, string newStart, string newEnd)
 		{
-			/** TODO(incomplete) this replaces a specific style with another. should is just replace each currently found note style with the new one instead? */
+			/** TODO(incomplete) this replaces a specific style with another. should it just replace each currently found note style with the new one instead? */
+			/** TODO(incomplete) this should also create a backup of the file before replacing, and if something goes wrong, revert to the backup */
 			// collect all files used and the line numbers that their notes appear on, and the line numbers that their notes end on
 			var files = new Dictionary<string, List<int>>();
 			foreach (var note in _notes)

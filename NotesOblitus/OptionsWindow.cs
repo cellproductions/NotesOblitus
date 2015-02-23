@@ -116,7 +116,7 @@ namespace NotesOblitus
 				FileTypes = cbFiltersTypes.Items.OfType<string>().ToArray(),
 				PathFilter = _manager.FilteredPaths.ToArray(),
 				FilterTags = cFiltersFilter.Checked.ToString(),
-				TagFilter = cbFiltersTypes.Items.OfType<string>().ToArray()
+				TagFilter = cbFiltersTags.Items.OfType<string>().ToArray()
 			};
 
 			return settings;

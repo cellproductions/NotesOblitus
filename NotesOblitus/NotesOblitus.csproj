@@ -194,7 +194,7 @@
     <EmbeddedResource Include="StatisticsDialog.resx">
       <DependentUpon>StatisticsDialog.cs</DependentUpon>
     </EmbeddedResource>
-    <None Include="default.ctdprj">
+    <None Include="default.noprj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
@@ -215,6 +215,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="changes.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Help\basics.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -257,6 +260,9 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>if $(ConfigurationName) == Release "$(SolutionDir)"PostBuild.bat "$(ProjectDir)$(OutDir)" "$(TargetFileName)" "$(SolutionDir)\"</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>if $(ConfigurationName) == Debug "$(SolutionDir)VersionUpdater\bin\Release\VersionUpdater.exe" "$(SolutionDir)GlobalVars.cs" ApplicationVersion</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

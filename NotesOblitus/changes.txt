@@ -1,0 +1,5 @@
+﻿1.0.6
+* fixed loading from path passed as an argument
+
+1.0.0
+* release

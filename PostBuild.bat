@@ -12,10 +12,12 @@ mkdir %3Export
 :: Merge dlls and the exe together
 echo Merging assemblies
 cd %1
-%3packages\ilmerge.2.14.1208\tools\ILMerge.exe %2 Newtonsoft.Json.dll /out:NotesOblitus.exe
+set assemblies=%2 Newtonsoft.Json.dll
+%3packages\ilmerge.2.14.1208\tools\ILMerge.exe %assemblies% /out:NotesOblitus.exe
+echo Assemblies merged: %assemblies%
 :: Copy all the relavant files to the Export folder
 echo Copying paths to Export
 cd %3
 xcopy %1*.* %3Export /s /e /exclude:CopyFilter.txt
-"C:\Users\Callum\Documents\Visual Studio 2013\Projects\NotesOblitus\ManifestBuilder\bin\Release\ManifestBuilder.exe" %3Export
+ManifestBuilder\bin\Release\ManifestBuilder.exe %3Export
 xcopy %3Patcher\bin\Release\Patcher.exe %3Export

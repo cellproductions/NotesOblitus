@@ -30,8 +30,8 @@
 		{
 			this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
 			this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
-			this.bOk = new System.Windows.Forms.Button();
 			this.bCancel = new System.Windows.Forms.Button();
+			this.bOk = new System.Windows.Forms.Button();
 			this.tvPaths = new System.Windows.Forms.TreeView();
 			this.tableLayoutPanel1.SuspendLayout();
 			this.tableLayoutPanel2.SuspendLayout();
@@ -68,17 +68,6 @@
 			this.tableLayoutPanel2.Size = new System.Drawing.Size(298, 29);
 			this.tableLayoutPanel2.TabIndex = 0;
 			// 
-			// bOk
-			// 
-			this.bOk.DialogResult = System.Windows.Forms.DialogResult.OK;
-			this.bOk.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.bOk.Location = new System.Drawing.Point(111, 3);
-			this.bOk.Name = "bOk";
-			this.bOk.Size = new System.Drawing.Size(89, 23);
-			this.bOk.TabIndex = 0;
-			this.bOk.Text = "Ok";
-			this.bOk.UseVisualStyleBackColor = true;
-			// 
 			// bCancel
 			// 
 			this.bCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
@@ -90,6 +79,17 @@
 			this.bCancel.Text = "Cancel";
 			this.bCancel.UseVisualStyleBackColor = true;
 			// 
+			// bOk
+			// 
+			this.bOk.DialogResult = System.Windows.Forms.DialogResult.OK;
+			this.bOk.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.bOk.Location = new System.Drawing.Point(111, 3);
+			this.bOk.Name = "bOk";
+			this.bOk.Size = new System.Drawing.Size(89, 23);
+			this.bOk.TabIndex = 0;
+			this.bOk.Text = "Ok";
+			this.bOk.UseVisualStyleBackColor = true;
+			// 
 			// tvPaths
 			// 
 			this.tvPaths.CheckBoxes = true;
@@ -98,6 +98,7 @@
 			this.tvPaths.Name = "tvPaths";
 			this.tvPaths.Size = new System.Drawing.Size(298, 301);
 			this.tvPaths.TabIndex = 1;
+			this.tvPaths.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.tvPaths_NodeMouseClick);
 			// 
 			// PathTreeDialog
 			// 

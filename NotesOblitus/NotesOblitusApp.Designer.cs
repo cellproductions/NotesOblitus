@@ -64,6 +64,11 @@ namespace NotesOblitus
 			this.miAboutHelp = new System.Windows.Forms.ToolStripMenuItem();
 			this.miAboutAbout = new System.Windows.Forms.ToolStripMenuItem();
 			this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+			this.niMainNotify = new System.Windows.Forms.NotifyIcon(this.components);
+			this.msNotifyMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+			this.miNotifyAuto = new System.Windows.Forms.ToolStripMenuItem();
+			this.miNotifyAbout = new System.Windows.Forms.ToolStripMenuItem();
+			this.miNotifyExit = new System.Windows.Forms.ToolStripMenuItem();
 			this.tbInitialPath = new NotesOblitus.Controls.TextBoxPlaceHolder();
 			this.htcMainView = new NotesOblitus.Controls.HiddenTabControl();
 			this.tpTable = new System.Windows.Forms.TabPage();
@@ -74,18 +79,13 @@ namespace NotesOblitus
 			this.cMessage = new System.Windows.Forms.DataGridViewTextBoxColumn();
 			this.tpTree = new System.Windows.Forms.TabPage();
 			this.tvListNotes = new System.Windows.Forms.TreeView();
-			this.niMainNotify = new System.Windows.Forms.NotifyIcon(this.components);
-			this.msNotifyMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
-			this.miNotifyAuto = new System.Windows.Forms.ToolStripMenuItem();
-			this.miNotifyAbout = new System.Windows.Forms.ToolStripMenuItem();
-			this.miNotifyExit = new System.Windows.Forms.ToolStripMenuItem();
 			this.msMainMenu.SuspendLayout();
 			this.tableLayoutPanel1.SuspendLayout();
+			this.msNotifyMenu.SuspendLayout();
 			this.htcMainView.SuspendLayout();
 			this.tpTable.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.dgListNotes)).BeginInit();
 			this.tpTree.SuspendLayout();
-			this.msNotifyMenu.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// msMainMenu
@@ -341,6 +341,45 @@ namespace NotesOblitus
 			this.tableLayoutPanel1.Size = new System.Drawing.Size(784, 538);
 			this.tableLayoutPanel1.TabIndex = 1;
 			// 
+			// niMainNotify
+			// 
+			this.niMainNotify.ContextMenuStrip = this.msNotifyMenu;
+			this.niMainNotify.Icon = ((System.Drawing.Icon)(resources.GetObject("niMainNotify.Icon")));
+			this.niMainNotify.Text = "niMainIcon";
+			this.niMainNotify.Visible = true;
+			// 
+			// msNotifyMenu
+			// 
+			this.msNotifyMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.miNotifyAuto,
+            this.miNotifyAbout,
+            this.miNotifyExit});
+			this.msNotifyMenu.Name = "msNotifyMenu";
+			this.msNotifyMenu.Size = new System.Drawing.Size(143, 70);
+			this.msNotifyMenu.Opening += new System.ComponentModel.CancelEventHandler(this.msNotifyMenu_Opening);
+			// 
+			// miNotifyAuto
+			// 
+			this.miNotifyAuto.CheckOnClick = true;
+			this.miNotifyAuto.Name = "miNotifyAuto";
+			this.miNotifyAuto.Size = new System.Drawing.Size(142, 22);
+			this.miNotifyAuto.Text = "Auto Refresh";
+			this.miNotifyAuto.Click += new System.EventHandler(this.miNotifyAuto_Click);
+			// 
+			// miNotifyAbout
+			// 
+			this.miNotifyAbout.Name = "miNotifyAbout";
+			this.miNotifyAbout.Size = new System.Drawing.Size(142, 22);
+			this.miNotifyAbout.Text = "About";
+			this.miNotifyAbout.Click += new System.EventHandler(this.miNotifyAbout_Click);
+			// 
+			// miNotifyExit
+			// 
+			this.miNotifyExit.Name = "miNotifyExit";
+			this.miNotifyExit.Size = new System.Drawing.Size(142, 22);
+			this.miNotifyExit.Text = "Exit";
+			this.miNotifyExit.Click += new System.EventHandler(this.miNotifyExit_Click);
+			// 
 			// tbInitialPath
 			// 
 			this.tbInitialPath.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -399,6 +438,7 @@ namespace NotesOblitus
 			this.dgListNotes.Size = new System.Drawing.Size(770, 481);
 			this.dgListNotes.TabIndex = 0;
 			this.dgListNotes.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgListNotes_CellDoubleClick);
+			this.dgListNotes.CellMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dgListNotes_CellMouseClick);
 			this.dgListNotes.SelectionChanged += new System.EventHandler(this.dgListNotes_SelectionChanged);
 			// 
 			// cFile
@@ -446,46 +486,8 @@ namespace NotesOblitus
 			this.tvListNotes.Size = new System.Drawing.Size(770, 481);
 			this.tvListNotes.TabIndex = 0;
 			this.tvListNotes.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.tvListNotes_AfterSelect);
+			this.tvListNotes.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.tvListNotes_NodeMouseClick);
 			this.tvListNotes.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.tvListNotes_NodeMouseDoubleClick);
-			// 
-			// niMainNotify
-			// 
-			this.niMainNotify.ContextMenuStrip = this.msNotifyMenu;
-			this.niMainNotify.Icon = ((System.Drawing.Icon)(resources.GetObject("niMainNotify.Icon")));
-			this.niMainNotify.Text = "niMainIcon";
-			this.niMainNotify.Visible = true;
-			// 
-			// msNotifyMenu
-			// 
-			this.msNotifyMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.miNotifyAuto,
-            this.miNotifyAbout,
-            this.miNotifyExit});
-			this.msNotifyMenu.Name = "msNotifyMenu";
-			this.msNotifyMenu.Size = new System.Drawing.Size(143, 70);
-			this.msNotifyMenu.Opening += new System.ComponentModel.CancelEventHandler(this.msNotifyMenu_Opening);
-			// 
-			// miNotifyAuto
-			// 
-			this.miNotifyAuto.CheckOnClick = true;
-			this.miNotifyAuto.Name = "miNotifyAuto";
-			this.miNotifyAuto.Size = new System.Drawing.Size(142, 22);
-			this.miNotifyAuto.Text = "Auto Refresh";
-			this.miNotifyAuto.Click += new System.EventHandler(this.miNotifyAuto_Click);
-			// 
-			// miNotifyAbout
-			// 
-			this.miNotifyAbout.Name = "miNotifyAbout";
-			this.miNotifyAbout.Size = new System.Drawing.Size(142, 22);
-			this.miNotifyAbout.Text = "About";
-			this.miNotifyAbout.Click += new System.EventHandler(this.miNotifyAbout_Click);
-			// 
-			// miNotifyExit
-			// 
-			this.miNotifyExit.Name = "miNotifyExit";
-			this.miNotifyExit.Size = new System.Drawing.Size(142, 22);
-			this.miNotifyExit.Text = "Exit";
-			this.miNotifyExit.Click += new System.EventHandler(this.miNotifyExit_Click);
 			// 
 			// NotesOblitusApp
 			// 
@@ -506,11 +508,11 @@ namespace NotesOblitus
 			this.msMainMenu.PerformLayout();
 			this.tableLayoutPanel1.ResumeLayout(false);
 			this.tableLayoutPanel1.PerformLayout();
+			this.msNotifyMenu.ResumeLayout(false);
 			this.htcMainView.ResumeLayout(false);
 			this.tpTable.ResumeLayout(false);
 			((System.ComponentModel.ISupportInitialize)(this.dgListNotes)).EndInit();
 			this.tpTree.ResumeLayout(false);
-			this.msNotifyMenu.ResumeLayout(false);
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
