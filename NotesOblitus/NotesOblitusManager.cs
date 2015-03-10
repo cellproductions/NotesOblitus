@@ -357,6 +357,18 @@ namespace NotesOblitus
 
 		public void SaveProjectAs()
 		{
+			var filename = ShowSaveProjectDialog();
+			if (filename == null)
+				return;
+
+			DefaultProject.LastProject = filename;
+			Owner.Text = GlobalVars.ApplicationTitle + ' ' + GlobalVars.ApplicationVersion + @" - " + GetFolderName(DefaultProject.LastProject);
+			_defaultPrjLoaded = false;
+			WriteProject(SaveMode.ProjectOnly);
+		}
+
+		private string ShowSaveProjectDialog()
+		{
 			var dialog = new SaveFileDialog
 			{
 				FileName = '*' + ProjectExtension,
@@ -368,13 +380,7 @@ namespace NotesOblitus
 				AddExtension = true
 			};
 
-			if (dialog.ShowDialog(Owner) != DialogResult.OK)
-				return;
-
-			DefaultProject.LastProject = dialog.FileName;
-			Owner.Text = GlobalVars.ApplicationTitle + ' ' + GlobalVars.ApplicationVersion + @" - " + GetFolderName(DefaultProject.LastProject);
-			_defaultPrjLoaded = false;
-			WriteProject(SaveMode.ProjectOnly);
+			return dialog.ShowDialog(Owner) == DialogResult.OK ? dialog.FileName : null;
 		}
 
 		private void WriteProject(SaveMode saveMode)
@@ -382,27 +388,42 @@ namespace NotesOblitus
 			switch (saveMode)
 			{
 				case SaveMode.DefaultOnly:
-				{
-					var defaultserialized = JsonConvert.SerializeObject(DefaultProject, Formatting.Indented);
-					File.WriteAllText(DefaultPrjFileName, defaultserialized);
-				}
+					{
+						WriteWithPermissions(DefaultPrjFileName, DefaultProject);
+					}
 					break;
 				case SaveMode.ProjectOnly:
-				{
-					var projectserialized = JsonConvert.SerializeObject(CurrentProject, Formatting.Indented);
-					File.WriteAllText(DefaultProject.LastProject, projectserialized);
-				}
+					{
+						WriteWithPermissions(DefaultProject.LastProject, CurrentProject);
+					}
 					break;
 				case SaveMode.Both:
-				{
-					var defaultserialized = JsonConvert.SerializeObject(DefaultProject, Formatting.Indented);
-					var projectserialized = JsonConvert.SerializeObject(CurrentProject, Formatting.Indented);
-					File.WriteAllText(DefaultPrjFileName, defaultserialized);
-					File.WriteAllText(DefaultProject.LastProject, projectserialized);
-				}
+					{
+						WriteWithPermissions(DefaultPrjFileName, DefaultProject);
+						WriteWithPermissions(DefaultProject.LastProject, CurrentProject);
+					}
 					break;
 				default:
 					throw new Exception("Invalid SaveMode! [savemode=" + saveMode + ']');
+			}
+		}
+
+		private void WriteWithPermissions(string fileName, object project)
+		{
+			try
+			{
+				var defaultserialized = JsonConvert.SerializeObject(project, Formatting.Indented);
+				File.WriteAllText(fileName, defaultserialized);
+			}
+			catch (UnauthorizedAccessException)
+			{
+				if (MessageBox.Show(Owner, @"You do not have permission to save " + fileName + @"! Would you like to save manually?", @"Save Error", 
+					MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+				{
+					var filename = ShowSaveProjectDialog();
+					if (filename != null)
+						WriteWithPermissions(fileName, project);
+				}
 			}
 		}
 
@@ -842,7 +863,7 @@ namespace NotesOblitus
 
 			var notenode = new TreeNode(note.Message)
 			{
-				ToolTipText = "(line " + note.Line + ")" + (note.Tag.Length > 0 ? (" [" + note.Tag + "]") : ""),
+				ToolTipText = "(line " + note.Line + ")" + (note.Tag.Length > 0 ? (" [" + note.Tag.ToUpper() + "]") : ""),
 				Tag = note
 			};
 			currNode.Nodes.Add(notenode);

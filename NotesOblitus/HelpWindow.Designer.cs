@@ -52,6 +52,7 @@
 			this.Controls.Add(this.wbDisplay);
 			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.Name = "HelpWindow";
+			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
 			this.Text = "Help";
 			this.ResumeLayout(false);
 
