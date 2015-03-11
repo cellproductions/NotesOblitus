@@ -32,7 +32,7 @@ namespace NotesOblitus
 
 		private void NotesOblitusApp_FormClosed(object sender, FormClosedEventArgs e)
 		{
-			_manager.ExitApplication();
+			_manager.ExitApplication(true);
 			niMainNotify.Dispose();
 		}
 
@@ -41,6 +41,14 @@ namespace NotesOblitus
 			_manager.CheckForUpdates(false, false, false);
 			_manager.ScanAndCollectNotes();
 			UpdateView();
+		}
+
+		private void miFile_Click(object sender, EventArgs e)
+		{
+			_manager.UpdateRecentProjects(miFileRecentProjects, _manager.DefaultProject.RecentProjects);
+			_manager.UpdateRecentSearches(miFileRecentSearches, _manager.DefaultProject.RecentSearchPaths, tbInitialPath);
+			miFileRecentProjects.Invalidate();
+			miFileRecentSearches.Invalidate();
 		}
 
 		private void miFileOpen_Click(object sender, EventArgs e)

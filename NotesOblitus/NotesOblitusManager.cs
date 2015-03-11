@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -56,6 +58,7 @@ namespace NotesOblitus
 		private const string HelpIndexFileName = "index.html";
 		private const string DefaultPrjFileName = "default.noprj";
 		private const string ProjectExtension = ".noprj";
+		private const int RecentItemsLimit = 5;
 
 		public NotesOblitusApp Owner { get; internal set; }
 		public ViewMode CurrentViewMode { get; set; }
@@ -104,8 +107,45 @@ namespace NotesOblitus
 			};
 		}
 
-		private static void CreateDefaultPaths()
+		private void CreateDefaultPaths()
 		{
+			try
+			{
+				var test = Application.StartupPath + "\\test";
+				File.Create(test).Close(); /** TODO(note) pretty grub way of finding out if we have permission to write in this folder */
+				File.Delete(test);
+			}
+			catch (UnauthorizedAccessException)
+			{
+				if (MessageBox.Show(Owner,
+					@"Notes Oblitus does not have permission to read/write its files! Would you like to restart in elevated mode?",
+					@"Permissions",
+					MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+				{
+					var info = new ProcessStartInfo(Application.ExecutablePath)
+					{
+						UseShellExecute = true,
+						Verb = "runas"
+					};
+					try
+					{
+						Process.Start(info);
+					}
+					catch (Win32Exception ex)
+					{
+						if (ex.NativeErrorCode == 1223) // 1223 = ERROR_CANCELLED
+							MessageBox.Show(Owner, @"Failed to read/write from/to configuration files! Please run in elevated mode or move Notes Oblitus to a location that requires less privileges.", 
+							@"Permissions", MessageBoxButtons.OK, MessageBoxIcon.Error);
+					}
+				}
+				else
+				{
+					MessageBox.Show(Owner, @"Failed to read/write from/to configuration files! Please run in elevated mode or move Notes Oblitus to a location that requires less privileges.",
+						@"Permissions", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				}
+				Owner.Load += (sender, args) => ExitApplication(false);
+			}
+
 			if (!Directory.Exists(ProjectDirectory))
 				Directory.CreateDirectory(ProjectDirectory);
 			if (!Directory.Exists(HelpDirectory))
@@ -310,7 +350,7 @@ namespace NotesOblitus
 				};
 				_defaultPrjLoaded = false;
 				// this will stop this instance of the app from saving the default settings (will get saved on restart)
-				ExitApplication();
+				ExitApplication(true);
 			}
 			catch (Exception e)
 			{
@@ -334,17 +374,26 @@ namespace NotesOblitus
 			if (dialog.ShowDialog(Owner) != DialogResult.OK)
 				return null;
 
-			DefaultProject.LastProject = dialog.FileName;
+			RunProject(dialog.FileName);
+			
+			return CurrentProject.LastSearchPath;
+		}
+
+		private void RunProject(string projectPath)
+		{
+			DefaultProject.LastProject = projectPath;
 			CurrentProject = JsonConvert.DeserializeObject<Project>(File.ReadAllText(DefaultProject.LastProject));
 			_defaultPrjLoaded = false;
 			Owner.Text = GlobalVars.ApplicationTitle + ' ' + GlobalVars.ApplicationVersion + @" - " + GetFolderName(DefaultProject.LastProject);
+
+			var recentprojects = DefaultProject.RecentProjects;
+			AddToRecents(DefaultProject.LastProject, ref recentprojects, RecentItemsLimit);
+			DefaultProject.RecentProjects = recentprojects;
 
 			ResetAutoTimer();
 
 			if (!AutoScan)
 				ScanAndCollectNotes();
-
-			return CurrentProject.LastSearchPath;
 		}
 
 		public void SaveProject()
@@ -364,6 +413,11 @@ namespace NotesOblitus
 			DefaultProject.LastProject = filename;
 			Owner.Text = GlobalVars.ApplicationTitle + ' ' + GlobalVars.ApplicationVersion + @" - " + GetFolderName(DefaultProject.LastProject);
 			_defaultPrjLoaded = false;
+
+			var recentprojects = DefaultProject.RecentProjects;
+			AddToRecents(DefaultProject.LastProject, ref recentprojects, RecentItemsLimit);
+			DefaultProject.RecentProjects = recentprojects;
+
 			WriteProject(SaveMode.ProjectOnly);
 		}
 
@@ -389,41 +443,26 @@ namespace NotesOblitus
 			{
 				case SaveMode.DefaultOnly:
 					{
-						WriteWithPermissions(DefaultPrjFileName, DefaultProject);
+						var defaultserialized = JsonConvert.SerializeObject(DefaultProject, Formatting.Indented);
+						File.WriteAllText(DefaultPrjFileName, defaultserialized);
 					}
 					break;
 				case SaveMode.ProjectOnly:
 					{
-						WriteWithPermissions(DefaultProject.LastProject, CurrentProject);
+						var currentserialized = JsonConvert.SerializeObject(CurrentProject, Formatting.Indented);
+						File.WriteAllText(DefaultProject.LastProject, currentserialized);
 					}
 					break;
 				case SaveMode.Both:
 					{
-						WriteWithPermissions(DefaultPrjFileName, DefaultProject);
-						WriteWithPermissions(DefaultProject.LastProject, CurrentProject);
+						var defaultserialized = JsonConvert.SerializeObject(DefaultProject, Formatting.Indented);
+						var currentserialized = JsonConvert.SerializeObject(CurrentProject, Formatting.Indented);
+						File.WriteAllText(DefaultPrjFileName, defaultserialized);
+						File.WriteAllText(DefaultProject.LastProject, currentserialized);
 					}
 					break;
 				default:
 					throw new Exception("Invalid SaveMode! [savemode=" + saveMode + ']');
-			}
-		}
-
-		private void WriteWithPermissions(string fileName, object project)
-		{
-			try
-			{
-				var defaultserialized = JsonConvert.SerializeObject(project, Formatting.Indented);
-				File.WriteAllText(fileName, defaultserialized);
-			}
-			catch (UnauthorizedAccessException)
-			{
-				if (MessageBox.Show(Owner, @"You do not have permission to save " + fileName + @"! Would you like to save manually?", @"Save Error", 
-					MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
-				{
-					var filename = ShowSaveProjectDialog();
-					if (filename != null)
-						WriteWithPermissions(fileName, project);
-				}
 			}
 		}
 
@@ -476,13 +515,84 @@ namespace NotesOblitus
 			}
 		}
 
-		public void ExitApplication()
+		public void UpdateRecentProjects(ToolStripMenuItem projectsView, string[] recentProjects)
+		{
+			projectsView.DropDownItems.Clear();
+			UpdateRecentItems(projectsView, recentProjects, (sender, args) =>
+			{
+				var view = (ToolStripMenuItem) sender;
+				RunProject(view.Tag as string);
+			});
+		}
+
+		public void UpdateRecentSearches(ToolStripMenuItem searchesView, string[] recentSearchPaths, TextBox initialPath)
+		{
+			searchesView.DropDownItems.Clear();
+			UpdateRecentItems(searchesView, recentSearchPaths, (sender, args) =>
+			{
+				var view = (ToolStripMenuItem)sender;
+				initialPath.Text = view.Tag as string;
+				ScanAndCollectNotes();
+			});
+		}
+
+		private void UpdateRecentItems(ToolStripDropDownItem itemView, IEnumerable<string> recentItems, EventHandler handler)
+		{
+			foreach (var item in recentItems)
+			{
+				var newitem = new ToolStripMenuItem
+				{
+					Size = new Size(195, 22),
+					Tag = item
+				};
+				newitem.Click += handler;
+				newitem.Text = GetShorterPath(item, newitem.Font, newitem.ContentRectangle.Width);
+
+				itemView.DropDownItems.Add(newitem);
+			}
+		}
+
+		private string GetShorterPath(string path, Font font, int width)
+		{
+			var fititem = path.Trim();
+			var graphics = Owner.CreateGraphics();
+
+			var splitqueue = new Queue<string>(fititem.Split(new[] { '\\' }, StringSplitOptions.RemoveEmptyEntries));
+			var drive = splitqueue.Dequeue();
+
+			do
+			{
+				var check = "";
+				var enumerator = splitqueue.GetEnumerator();
+				for (var i = 0; i < splitqueue.Count && enumerator.MoveNext(); ++i)
+					check += '\\' + enumerator.Current;
+
+				check = drive + "\\..." + check;
+				var size = graphics.MeasureString(check, font).ToSize();
+
+				if (size.Width >= width)
+				{
+					splitqueue.Dequeue();
+
+					if (splitqueue.Count <= 0)
+						break;
+				}
+				else
+					return check;
+
+			} while (true);
+
+			return fititem;
+		}
+
+		public void ExitApplication(bool save)
 		{
 			AutoScan = false;
 			if (_autoTimer.Enabled)
 				_autoTimer.Stop();
 
-			WriteProject(SaveMode.DefaultOnly); /** TODO(note) not sure if this should do this every time */
+			if (save)
+				WriteProject(SaveMode.DefaultOnly);
 
 			if (Application.OpenForms.OfType<NotesOblitusApp>().Any())
 				Owner.Close();
@@ -579,6 +689,10 @@ namespace NotesOblitus
 				if (string.IsNullOrEmpty(CurrentProject.LastSearchPath))
 					return;
 
+				var recentsearches = DefaultProject.RecentSearchPaths;
+				AddToRecents(CurrentProject.LastSearchPath, ref recentsearches, RecentItemsLimit);
+				DefaultProject.RecentSearchPaths = recentsearches;
+
 				ProgressWindow progresswindow = null;
 				if (showProgress)
 				{
@@ -597,7 +711,7 @@ namespace NotesOblitus
 				var files = GetScannableFilePaths(startpathname);
 				if (showProgress)
 					progresswindow.StartProgress(files.Count);
-
+				
 				var regex = new Regex("(^\\s*$)|(" + Regex.Escape(CurrentProject.NoteOpen) + "((.|\n)*?)" + Regex.Escape(CurrentProject.NoteClose) + ')',
 									RegexOptions.Multiline); // finds empty lines as well as notes
 
@@ -740,6 +854,29 @@ namespace NotesOblitus
 				if (text[i] == '\n')
 					++line;
 			return line;
+		}
+
+		private static void AddToRecents(string item, ref string[] recentItems, int itemLimit)
+		{
+			var recentlist = new List<string>(recentItems);
+
+			var comparer = new PathComparer();
+			var index = 0;
+			for (; index < recentlist.Count; ++index)
+			{
+				if (comparer.Equals(recentlist[index], item))
+					break;
+			}
+
+			if (index >= recentlist.Count)
+				recentlist.Insert(0, item);
+			else
+			{
+				recentlist.RemoveAt(index);
+				recentlist.Insert(0, item);
+			}
+
+			recentItems = recentlist.GetRange(0, Math.Min(recentlist.Count, itemLimit)).ToArray();
 		}
 
 		public void UpdateCurrentView(Control currentViewControl)
@@ -962,7 +1099,7 @@ namespace NotesOblitus
 		public void DisplayOptionsWindow()
 		{
 			var optionswindow = new OptionsWindow();
-			optionswindow.InitialiseSettings(DefaultProject, CurrentProject, _updateAvailable);
+			optionswindow.InitialiseSettings(DefaultProject, CurrentProject, _tags.ToList(), _updateAvailable);
 			optionswindow.ReplaceClicked += (sender, args) =>
 			{
 				var dialog = new ReplaceNotesDialog();

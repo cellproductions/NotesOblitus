@@ -62,6 +62,19 @@
 
 	public class DefaultProject : Project
 	{
+		/// <summary>
+		/// Previous project loaded.
+		/// </summary>
 		public string LastProject { get; set; }
+		
+		/// <summary>
+		/// Last five projects loaded.
+		/// </summary>
+		public string[] RecentProjects { get; set; }
+
+		/// <summary>
+		/// Last five paths searched.
+		/// </summary>
+		public string[] RecentSearchPaths { get; set; }
 	}
 }

@@ -7,6 +7,10 @@
 			return "" +
 				"{\n" +
 				"\t\"LastProject\": \"\",\n" +
+				"\t\"RecentProjects\": [\n" +
+				"\t],\n" +
+				"\t\"RecentSearchPaths\": [\n" +
+				"\t],\n" +
 				"\t\"DeleteFromSource\": \"False\",\n" +
 				"\t\"SearchDepth\": \"2\",\n" +
 				"\t\"LastSearchPath\": \"\",\n" +

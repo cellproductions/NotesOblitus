@@ -66,6 +66,7 @@
 			this.cbFiltersTypes = new System.Windows.Forms.ComboBox();
 			this.bFiltersRemoveType = new System.Windows.Forms.Button();
 			this.bFiltersAddType = new System.Windows.Forms.Button();
+			this.bFiltersInvert = new System.Windows.Forms.Button();
 			this.tabControl1.SuspendLayout();
 			this.tabPage1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.nGeneralDepth)).BeginInit();
@@ -413,6 +414,7 @@
 			// 
 			// tabPage3
 			// 
+			this.tabPage3.Controls.Add(this.bFiltersInvert);
 			this.tabPage3.Controls.Add(this.cFiltersFilter);
 			this.tabPage3.Controls.Add(this.bFiltersRemoveTag);
 			this.tabPage3.Controls.Add(this.cbFiltersTags);
@@ -544,6 +546,18 @@
 			this.bFiltersAddType.UseVisualStyleBackColor = true;
 			this.bFiltersAddType.Click += new System.EventHandler(this.bFiltersAddType_Click);
 			// 
+			// bFiltersInvert
+			// 
+			this.bFiltersInvert.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.bFiltersInvert.Location = new System.Drawing.Point(6, 187);
+			this.bFiltersInvert.Name = "bFiltersInvert";
+			this.bFiltersInvert.Size = new System.Drawing.Size(262, 23);
+			this.bFiltersInvert.TabIndex = 25;
+			this.bFiltersInvert.Text = "Invert tag filter";
+			this.bFiltersInvert.UseVisualStyleBackColor = true;
+			this.bFiltersInvert.Click += new System.EventHandler(this.bFiltersInvert_Click);
+			// 
 			// OptionsWindow
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -608,5 +622,6 @@
 		private System.Windows.Forms.Label lGeneralSeconds;
 		private Controls.TextBoxPlaceHolder tbPreviewEditor;
 		private System.Windows.Forms.Button bGeneralCheckUpdate;
+		private System.Windows.Forms.Button bFiltersInvert;
 	}
 }

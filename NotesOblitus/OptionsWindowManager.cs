@@ -24,6 +24,7 @@ namespace NotesOblitus
 		public string RootSearchPath { get; set; }
 		public List<string> FilteredPaths { get; set; }
 		public string[] AcceptedTypes { get; set; }
+		public List<string> FilteredTags { get; set; }
 
 		public OptionsWindowManager(OptionsWindow owner)
 		{
@@ -154,6 +155,12 @@ namespace NotesOblitus
 				return;
 			foreach (var node in currentNode.Nodes)
 				CollectUnchecked(node as TreeNode, nodes);
+		}
+
+		public IEnumerable<string> InvertTagFilter(ComboBox.ObjectCollection tagFilter)
+		{
+			var filter = tagFilter.Cast<string>();
+			return FilteredTags.Where(tag => !filter.Contains(tag)).ToList();
 		}
 	}
 }

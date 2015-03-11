@@ -35,7 +35,7 @@ namespace NotesOblitus
 			this.components = new System.ComponentModel.Container();
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(NotesOblitusApp));
 			this.msMainMenu = new System.Windows.Forms.MenuStrip();
-			this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.miFile = new System.Windows.Forms.ToolStripMenuItem();
 			this.miFileOpen = new System.Windows.Forms.ToolStripMenuItem();
 			this.miFileSave = new System.Windows.Forms.ToolStripMenuItem();
 			this.miFileSaveAs = new System.Windows.Forms.ToolStripMenuItem();
@@ -47,6 +47,8 @@ namespace NotesOblitus
 			this.miFileExport = new System.Windows.Forms.ToolStripMenuItem();
 			this.miExportXml = new System.Windows.Forms.ToolStripMenuItem();
 			this.miExportJson = new System.Windows.Forms.ToolStripMenuItem();
+			this.miFileRecentProjects = new System.Windows.Forms.ToolStripMenuItem();
+			this.miFileRecentSearches = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
 			this.miFileExit = new System.Windows.Forms.ToolStripMenuItem();
 			this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -64,11 +66,6 @@ namespace NotesOblitus
 			this.miAboutHelp = new System.Windows.Forms.ToolStripMenuItem();
 			this.miAboutAbout = new System.Windows.Forms.ToolStripMenuItem();
 			this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-			this.niMainNotify = new System.Windows.Forms.NotifyIcon(this.components);
-			this.msNotifyMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
-			this.miNotifyAuto = new System.Windows.Forms.ToolStripMenuItem();
-			this.miNotifyAbout = new System.Windows.Forms.ToolStripMenuItem();
-			this.miNotifyExit = new System.Windows.Forms.ToolStripMenuItem();
 			this.tbInitialPath = new NotesOblitus.Controls.TextBoxPlaceHolder();
 			this.htcMainView = new NotesOblitus.Controls.HiddenTabControl();
 			this.tpTable = new System.Windows.Forms.TabPage();
@@ -79,19 +76,24 @@ namespace NotesOblitus
 			this.cMessage = new System.Windows.Forms.DataGridViewTextBoxColumn();
 			this.tpTree = new System.Windows.Forms.TabPage();
 			this.tvListNotes = new System.Windows.Forms.TreeView();
+			this.niMainNotify = new System.Windows.Forms.NotifyIcon(this.components);
+			this.msNotifyMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+			this.miNotifyAuto = new System.Windows.Forms.ToolStripMenuItem();
+			this.miNotifyAbout = new System.Windows.Forms.ToolStripMenuItem();
+			this.miNotifyExit = new System.Windows.Forms.ToolStripMenuItem();
 			this.msMainMenu.SuspendLayout();
 			this.tableLayoutPanel1.SuspendLayout();
-			this.msNotifyMenu.SuspendLayout();
 			this.htcMainView.SuspendLayout();
 			this.tpTable.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.dgListNotes)).BeginInit();
 			this.tpTree.SuspendLayout();
+			this.msNotifyMenu.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// msMainMenu
 			// 
 			this.msMainMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem,
+            this.miFile,
             this.viewToolStripMenuItem,
             this.editToolStripMenuItem,
             this.aboutToolStripMenuItem});
@@ -101,9 +103,9 @@ namespace NotesOblitus
 			this.msMainMenu.TabIndex = 0;
 			this.msMainMenu.Text = "menuStrip1";
 			// 
-			// fileToolStripMenuItem
+			// miFile
 			// 
-			this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+			this.miFile.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.miFileOpen,
             this.miFileSave,
             this.miFileSaveAs,
@@ -113,11 +115,14 @@ namespace NotesOblitus
             this.miFileAutoRefresh,
             this.toolStripSeparator2,
             this.miFileExport,
+            this.miFileRecentProjects,
+            this.miFileRecentSearches,
             this.toolStripSeparator3,
             this.miFileExit});
-			this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-			this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
-			this.fileToolStripMenuItem.Text = "File";
+			this.miFile.Name = "miFile";
+			this.miFile.Size = new System.Drawing.Size(37, 20);
+			this.miFile.Text = "File";
+			this.miFile.Click += new System.EventHandler(this.miFile_Click);
 			// 
 			// miFileOpen
 			// 
@@ -200,6 +205,18 @@ namespace NotesOblitus
 			this.miExportJson.Size = new System.Drawing.Size(98, 22);
 			this.miExportJson.Text = "Json";
 			this.miExportJson.Click += new System.EventHandler(this.miExportJson_Click);
+			// 
+			// miFileRecentProjects
+			// 
+			this.miFileRecentProjects.Name = "miFileRecentProjects";
+			this.miFileRecentProjects.Size = new System.Drawing.Size(195, 22);
+			this.miFileRecentProjects.Text = "Recent Projects";
+			// 
+			// miFileRecentSearches
+			// 
+			this.miFileRecentSearches.Name = "miFileRecentSearches";
+			this.miFileRecentSearches.Size = new System.Drawing.Size(195, 22);
+			this.miFileRecentSearches.Text = "Recent Search Paths";
 			// 
 			// toolStripSeparator3
 			// 
@@ -341,45 +358,6 @@ namespace NotesOblitus
 			this.tableLayoutPanel1.Size = new System.Drawing.Size(784, 538);
 			this.tableLayoutPanel1.TabIndex = 1;
 			// 
-			// niMainNotify
-			// 
-			this.niMainNotify.ContextMenuStrip = this.msNotifyMenu;
-			this.niMainNotify.Icon = ((System.Drawing.Icon)(resources.GetObject("niMainNotify.Icon")));
-			this.niMainNotify.Text = "niMainIcon";
-			this.niMainNotify.Visible = true;
-			// 
-			// msNotifyMenu
-			// 
-			this.msNotifyMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.miNotifyAuto,
-            this.miNotifyAbout,
-            this.miNotifyExit});
-			this.msNotifyMenu.Name = "msNotifyMenu";
-			this.msNotifyMenu.Size = new System.Drawing.Size(143, 70);
-			this.msNotifyMenu.Opening += new System.ComponentModel.CancelEventHandler(this.msNotifyMenu_Opening);
-			// 
-			// miNotifyAuto
-			// 
-			this.miNotifyAuto.CheckOnClick = true;
-			this.miNotifyAuto.Name = "miNotifyAuto";
-			this.miNotifyAuto.Size = new System.Drawing.Size(142, 22);
-			this.miNotifyAuto.Text = "Auto Refresh";
-			this.miNotifyAuto.Click += new System.EventHandler(this.miNotifyAuto_Click);
-			// 
-			// miNotifyAbout
-			// 
-			this.miNotifyAbout.Name = "miNotifyAbout";
-			this.miNotifyAbout.Size = new System.Drawing.Size(142, 22);
-			this.miNotifyAbout.Text = "About";
-			this.miNotifyAbout.Click += new System.EventHandler(this.miNotifyAbout_Click);
-			// 
-			// miNotifyExit
-			// 
-			this.miNotifyExit.Name = "miNotifyExit";
-			this.miNotifyExit.Size = new System.Drawing.Size(142, 22);
-			this.miNotifyExit.Text = "Exit";
-			this.miNotifyExit.Click += new System.EventHandler(this.miNotifyExit_Click);
-			// 
 			// tbInitialPath
 			// 
 			this.tbInitialPath.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -489,6 +467,45 @@ namespace NotesOblitus
 			this.tvListNotes.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.tvListNotes_NodeMouseClick);
 			this.tvListNotes.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.tvListNotes_NodeMouseDoubleClick);
 			// 
+			// niMainNotify
+			// 
+			this.niMainNotify.ContextMenuStrip = this.msNotifyMenu;
+			this.niMainNotify.Icon = ((System.Drawing.Icon)(resources.GetObject("niMainNotify.Icon")));
+			this.niMainNotify.Text = "niMainIcon";
+			this.niMainNotify.Visible = true;
+			// 
+			// msNotifyMenu
+			// 
+			this.msNotifyMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.miNotifyAuto,
+            this.miNotifyAbout,
+            this.miNotifyExit});
+			this.msNotifyMenu.Name = "msNotifyMenu";
+			this.msNotifyMenu.Size = new System.Drawing.Size(143, 70);
+			this.msNotifyMenu.Opening += new System.ComponentModel.CancelEventHandler(this.msNotifyMenu_Opening);
+			// 
+			// miNotifyAuto
+			// 
+			this.miNotifyAuto.CheckOnClick = true;
+			this.miNotifyAuto.Name = "miNotifyAuto";
+			this.miNotifyAuto.Size = new System.Drawing.Size(142, 22);
+			this.miNotifyAuto.Text = "Auto Refresh";
+			this.miNotifyAuto.Click += new System.EventHandler(this.miNotifyAuto_Click);
+			// 
+			// miNotifyAbout
+			// 
+			this.miNotifyAbout.Name = "miNotifyAbout";
+			this.miNotifyAbout.Size = new System.Drawing.Size(142, 22);
+			this.miNotifyAbout.Text = "About";
+			this.miNotifyAbout.Click += new System.EventHandler(this.miNotifyAbout_Click);
+			// 
+			// miNotifyExit
+			// 
+			this.miNotifyExit.Name = "miNotifyExit";
+			this.miNotifyExit.Size = new System.Drawing.Size(142, 22);
+			this.miNotifyExit.Text = "Exit";
+			this.miNotifyExit.Click += new System.EventHandler(this.miNotifyExit_Click);
+			// 
 			// NotesOblitusApp
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -508,11 +525,11 @@ namespace NotesOblitus
 			this.msMainMenu.PerformLayout();
 			this.tableLayoutPanel1.ResumeLayout(false);
 			this.tableLayoutPanel1.PerformLayout();
-			this.msNotifyMenu.ResumeLayout(false);
 			this.htcMainView.ResumeLayout(false);
 			this.tpTable.ResumeLayout(false);
 			((System.ComponentModel.ISupportInitialize)(this.dgListNotes)).EndInit();
 			this.tpTree.ResumeLayout(false);
+			this.msNotifyMenu.ResumeLayout(false);
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -521,7 +538,7 @@ namespace NotesOblitus
 		#endregion
 
 		private System.Windows.Forms.MenuStrip msMainMenu;
-		private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem miFile;
 		private System.Windows.Forms.ToolStripMenuItem miFileOpen;
 		private System.Windows.Forms.ToolStripMenuItem miFileSave;
 		private System.Windows.Forms.ToolStripMenuItem miFileSaveAs;
@@ -565,6 +582,8 @@ namespace NotesOblitus
 		private System.Windows.Forms.ToolStripMenuItem miFileAutoRefresh;
 		private TextBoxPlaceHolder tbInitialPath;
 		private HiddenTabControl htcMainView;
+		private System.Windows.Forms.ToolStripMenuItem miFileRecentProjects;
+		private System.Windows.Forms.ToolStripMenuItem miFileRecentSearches;
 	}
 }
 

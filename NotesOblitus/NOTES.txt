@@ -6,6 +6,7 @@ TODO:
 - add priority options for tags (they can be coloured in the main view as well)
 - links to sites or whatever (sensitive stuff) should be md5 hashed
 - create a status bar or something that tells the user when they have saved, etc.
+- add proxy settings
 
 - mention version details in the help
 - add changelog + license to the Help section
@@ -15,5 +16,7 @@ BUGS:
 - preview doesnt catch all syntax cases (numbers starting with 0x, or some cases involving notes, not to mention some from other languages. should simplify it)
 
 TEST:
+- make sure the patcher also runs in elevated mode when started from the main app in elevated mode
+
 
 

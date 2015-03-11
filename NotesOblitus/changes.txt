@@ -1,4 +1,13 @@
-﻿1.0.6
+﻿1.1.20
+* added recent projects/search paths
+* added tag filter inversion (tags in the filter are replaced with discovered tags that are not in the filter)
+
+1.1.0
+* added elevated mode (run as administrator) if NotesOblitus is located in a directory that it cannot write to
+* changed tags in tree view to upper-case
+* centred the Help window
+
+1.0.6
 * fixed loading from path passed as an argument
 
 1.0.0

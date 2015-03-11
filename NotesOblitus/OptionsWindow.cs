@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 #if DEBUG
 using System.Diagnostics;
 #endif
@@ -36,7 +37,7 @@ namespace NotesOblitus
 			_manager = new OptionsWindowManager(this);
 		}
 
-		public void InitialiseSettings(Project defaultOptions, Project project, bool updateAvailable)
+		public void InitialiseSettings(Project defaultOptions, Project project, List<string> foundTags, bool updateAvailable)
 		{
 			_manager.RootSearchPath = project.LastSearchPath;
 			_manager.AcceptedTypes = project.FileTypes;
@@ -85,11 +86,13 @@ namespace NotesOblitus
 			cFiltersFilter.Checked = GetBoolFromOption(defaultOptions, project, "FilterTags");
 			if (ValidOption(project.TagFilter))
 			{
+				_manager.FilteredTags = new List<string>(foundTags);
 				foreach (var tag in project.TagFilter)
 					cbFiltersTags.Items.Add(tag);
 			}
 			else if (ValidOption(defaultOptions.TagFilter))
 			{
+				_manager.FilteredTags = new List<string>(foundTags);
 				foreach (var tag in defaultOptions.TagFilter)
 					cbFiltersTags.Items.Add(tag);
 			}
@@ -307,6 +310,13 @@ namespace NotesOblitus
 		{
 			if (cbFiltersTags.SelectedItem != null)
 				cbFiltersTags.Items.Remove(cbFiltersTags.SelectedItem);
+		}
+
+		private void bFiltersInvert_Click(object sender, EventArgs e)
+		{
+			var newtags = _manager.InvertTagFilter(cbFiltersTags.Items);
+			cbFiltersTags.Items.Clear();
+			cbFiltersTags.Items.AddRange(newtags.ToArray<object>());
 		}
 	}
 }
