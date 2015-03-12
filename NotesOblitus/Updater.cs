@@ -115,6 +115,10 @@ namespace NotesOblitus
 						try
 						{
 							var client = new WebClient();
+							/** TODO(incomplete) add this: 
+							 *	client.Proxy = new WebProxy("usrname:pswd@proxy:port"); 
+							 *	first try without the proxy, then with the proxy. if still fails, err message
+							 */
 							client.DownloadFile(new Uri(downloadpath), savepath);
 						}
 						catch (Exception e)
