@@ -1,4 +1,7 @@
-﻿1.1.20
+﻿1.2.0
+* added proxy settings (across all projects)
+
+1.1.20
 * added recent projects/search paths
 * added tag filter inversion (tags in the filter are replaced with discovered tags that are not in the filter)
 

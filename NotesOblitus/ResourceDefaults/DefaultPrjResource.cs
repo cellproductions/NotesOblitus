@@ -11,6 +11,14 @@
 				"\t],\n" +
 				"\t\"RecentSearchPaths\": [\n" +
 				"\t],\n" +
+				"\t\"UseProxy\": \"False\",\n" +
+				"\t\"UseDefaultProxy\": \"True\",\n" +
+				"\t\"ProxyAddress\": \"\",\n" +
+				"\t\"ProxyPort\": \"\",\n" +
+				"\t\"UseDefaultCredentials\": \"False\",\n" +
+				"\t\"ShowPassword\": \"False\",\n" +
+				"\t\"ProxyUsername\": \"\",\n" +
+				"\t\"ProxyPassword\": \"\",\n" +
 				"\t\"DeleteFromSource\": \"False\",\n" +
 				"\t\"SearchDepth\": \"2\",\n" +
 				"\t\"LastSearchPath\": \"\",\n" +

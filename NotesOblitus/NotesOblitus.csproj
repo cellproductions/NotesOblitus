@@ -195,7 +195,7 @@
       <DependentUpon>StatisticsDialog.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="default.noprj">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">

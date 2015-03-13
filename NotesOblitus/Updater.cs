@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
-using System.Threading.Tasks;
 using Global;
 
 namespace NotesOblitus
@@ -37,10 +36,14 @@ namespace NotesOblitus
 		public event DownloadCompleteEvent DownloadComplete;
 		private readonly string _downloadPathUrl;
 		private readonly List<ManifestPath> _manifestPaths = new List<ManifestPath>();
+		private readonly bool _useProxy;
+		private readonly WebProxy _proxy;
 
-		public Updater(string downloadUrl)
+		public Updater(string downloadUrl, bool useProxy, WebProxy proxy)
 		{
 			_downloadPathUrl = downloadUrl;
+			_useProxy = useProxy;
+			_proxy = proxy;
 		}
 
 		public Dictionary<string, bool> AreUpdatesAvailable(Version localVersion, out Dictionary<string, Version> newVersions)
@@ -115,11 +118,22 @@ namespace NotesOblitus
 						try
 						{
 							var client = new WebClient();
-							/** TODO(incomplete) add this: 
-							 *	client.Proxy = new WebProxy("usrname:pswd@proxy:port"); 
-							 *	first try without the proxy, then with the proxy. if still fails, err message
-							 */
-							client.DownloadFile(new Uri(downloadpath), savepath);
+							try
+							{
+								client.DownloadFile(new Uri(downloadpath), savepath);
+							}
+							catch (WebException)
+							{
+								if (!_useProxy)
+									throw;
+
+								client = new WebClient
+								{
+									Proxy = _proxy
+								}; // reset internal stuff
+
+								client.DownloadFile(new Uri(downloadpath), savepath); // first try failed. maybe a proxy is in place? try with the proxy set
+							}
 						}
 						catch (Exception e)
 						{
@@ -138,51 +152,5 @@ namespace NotesOblitus
 					DownloadComplete(this, new EventArgs());
 			}
 		}
-		
-#if false
-		public async Task DownloadUpdate(string savePath)
-		{
-			if (savePath[savePath.Length - 1] != '\\')
-				savePath += '\\';
-			var clientlist = new List<WebClient>();
-			if (DownloadsStarted != null)
-				DownloadsStarted(this, new DownloadEventArgs { FileCount = _manifestPaths.Count });
-			foreach (var manifestPath in _manifestPaths)
-			{
-				var client = new WebClient();
-				if (manifestPath.IsFile)
-					client.DownloadFileAsync(new Uri(_downloadPathUrl + manifestPath.Path.Replace('\\', '/')),
-						savePath + '\\' + manifestPath.Path);
-				else
-					Directory.CreateDirectory(savePath + '\\' + manifestPath.Path);
-				clientlist.Add(client);
-			}
-			foreach (var client in clientlist)
-			{
-				while (client.IsBusy) { } /** TODO(note) maybe not the greatest way to wait for the end of the downloads, what if something froze for some reason? */
-				if (DownloadComplete != null)
-					DownloadComplete(this, new EventArgs());
-			}
-			if (savePath[savePath.Length - 1] != '\\')
-				savePath += '\\';
-			if (DownloadsStarted != null)
-				DownloadsStarted(this, new DownloadEventArgs { FileCount = _manifestPaths.Count });
-			await Task.WhenAll(_manifestPaths.Select(manifestpath => DownloadFile(manifestpath, savePath)));
-		}
-
-		private async Task DownloadFile(ManifestPath manifestPath, string savePath)
-		{
-			var client = new WebClient();
-			client.DownloadFileCompleted += (sender, args) =>
-			{
-				if (DownloadComplete != null)
-					DownloadComplete(this, new EventArgs());
-			};
-			if (manifestPath.IsFile)
-				await client.DownloadFileTaskAsync(new Uri(_downloadPathUrl + manifestPath.Path.Replace('\\', '/')), savePath + '\\' + manifestPath.Path);
-			else
-				Directory.CreateDirectory(savePath + '\\' + manifestPath.Path);
-		}
-#endif
 	}
 }

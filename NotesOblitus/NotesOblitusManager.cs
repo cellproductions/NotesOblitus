@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
@@ -257,7 +258,7 @@ namespace NotesOblitus
 				if (!manualcheck && update == UpdateStyle.None)
 					return;
 
-				var updater = new Updater("https://dl.dropboxusercontent.com/u/28551411/NotesOblitus/"); /** TODO(change) this path should be hashed */
+				var updater = CreateUpdater(!string.IsNullOrEmpty(DefaultProject.UseProxy) && Boolean.Parse(DefaultProject.UseProxy));
 				Dictionary<string, Version> newversions;
 				var updates = updater.AreUpdatesAvailable(Version.Parse(GlobalVars.ApplicationVersion), out newversions);
 				if (!updates["Application"]) /** TODO(incomplete) if the patcher/manifest needs updating, request a manual download */
@@ -358,6 +359,21 @@ namespace NotesOblitus
 						MessageBoxIcon.Exclamation);
 				Logger.Log(e);
 			}
+		}
+
+		private Updater CreateUpdater(bool useProxy) /** TODO(change) this path should be hashed */
+		{
+			return new Updater("https://dl.dropboxusercontent.com/u/28551411/NotesOblitus/", useProxy, !useProxy ? null :
+					(!string.IsNullOrEmpty(DefaultProject.UseDefaultProxy) && Boolean.Parse(DefaultProject.UseDefaultProxy) ? (WebProxy)WebRequest.DefaultWebProxy :
+					new WebProxy
+					{
+						Address = new Uri(DefaultProject.ProxyAddress + ':' + DefaultProject.ProxyPort),
+						UseDefaultCredentials = !string.IsNullOrEmpty(DefaultProject.UseDefaultCredentials) && Boolean.Parse(DefaultProject.UseDefaultCredentials),
+						Credentials = new NetworkCredential(
+							!string.IsNullOrEmpty(DefaultProject.ProxyUsername) ? DefaultProject.ProxyUsername : "",
+							!string.IsNullOrEmpty(DefaultProject.ProxyPassword) ? DefaultProject.ProxyPassword : ""),
+						BypassProxyOnLocal = false
+					}));
 		}
 
 		public string OpenProject()
@@ -1139,7 +1155,9 @@ namespace NotesOblitus
 				if (CurrentProject == DefaultProject)
 					lastproject = DefaultProject.LastProject;
 				var lastsearchpath = CurrentProject.LastSearchPath;
-				CurrentProject = optionswindow.RetrieveSettings();
+				var defaultproject = DefaultProject;
+				CurrentProject = optionswindow.RetrieveSettings(ref defaultproject);
+				DefaultProject = defaultproject;
 				CurrentProject.LastSearchPath = lastsearchpath;
 				if (CurrentProject == DefaultProject)
 					DefaultProject.LastProject = lastproject;

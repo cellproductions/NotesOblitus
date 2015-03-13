@@ -37,7 +37,7 @@ namespace NotesOblitus
 			_manager = new OptionsWindowManager(this);
 		}
 
-		public void InitialiseSettings(Project defaultOptions, Project project, List<string> foundTags, bool updateAvailable)
+		public void InitialiseSettings(DefaultProject defaultOptions, Project project, List<string> foundTags, bool updateAvailable)
 		{
 			_manager.RootSearchPath = project.LastSearchPath;
 			_manager.AcceptedTypes = project.FileTypes;
@@ -96,9 +96,36 @@ namespace NotesOblitus
 				foreach (var tag in defaultOptions.TagFilter)
 					cbFiltersTags.Items.Add(tag);
 			}
+
+			InitialiseDefaultSettings(defaultOptions);
 		}
 
-		public Project RetrieveSettings()
+		private void InitialiseDefaultSettings(DefaultProject defaultOptions)
+		{
+			// proxy
+			var prev = cProxyShowPwd.Checked;
+			cProxyShowPwd.Checked = GetBoolFromOption(defaultOptions, "ShowPassword");
+			if (cProxyShowPwd.Checked == prev && cProxyShowPwd.Enabled) // CheckedChanged wont be called if the value is the same was it was before
+				cProxyShowPwd_CheckedChanged(cProxyShowPwd, new EventArgs());
+			tbProxyUsername.Text = GetStringFromOption(defaultOptions, "ProxyUsername");
+			tbProxyPassword.Text = GetStringFromOption(defaultOptions, "ProxyPassword");
+			prev = cProxyDefaultCreds.Checked;
+			cProxyDefaultCreds.Checked = GetBoolFromOption(defaultOptions, "UseDefaultCredentials");
+			if (cProxyDefaultCreds.Checked == prev && cProxyDefaultCreds.Enabled) // CheckedChanged wont be called if the value is the same was it was before
+				cProxyDefaultCreds_CheckedChanged(cProxyDefaultCreds, new EventArgs());
+			prev = cProxyDefaultProxy.Checked;
+			cProxyDefaultProxy.Checked = GetBoolFromOption(defaultOptions, "UseDefaultProxy");
+			if (cProxyDefaultProxy.Checked == prev) // CheckedChanged wont be called if the value is the same was it was before
+				cProxyDefaultProxy_CheckedChanged(cProxyDefaultProxy, new EventArgs());
+			tbProxyAddress.Text = GetStringFromOption(defaultOptions, "ProxyAddress");
+			tbProxyPort.Text = GetStringFromOption(defaultOptions, "ProxyPort");
+			prev = cProxyUseProxy.Checked;
+			cProxyUseProxy.Checked = GetBoolFromOption(defaultOptions, "UseProxy");
+			if (cProxyUseProxy.Checked == prev) // CheckedChanged wont be called if the value is the same was it was before
+				cProxyUseProxy_CheckedChanged(cProxyUseProxy, new EventArgs());
+		}
+
+		public Project RetrieveSettings(ref DefaultProject defaultProject)
 		{
 			var settings = new Project
 			{
@@ -121,6 +148,16 @@ namespace NotesOblitus
 				FilterTags = cFiltersFilter.Checked.ToString(),
 				TagFilter = cbFiltersTags.Items.OfType<string>().ToArray()
 			};
+
+			// proxy
+			defaultProject.UseProxy = cProxyUseProxy.Checked.ToString();
+			defaultProject.UseDefaultProxy = cProxyDefaultProxy.Checked.ToString();
+			defaultProject.ProxyAddress = tbProxyAddress.Text;
+			defaultProject.ProxyPort = tbProxyPort.Text;
+			defaultProject.UseDefaultCredentials = cProxyDefaultCreds.Checked.ToString();
+			defaultProject.ShowPassword = cProxyShowPwd.Checked.ToString();
+			defaultProject.ProxyUsername = tbProxyUsername.Text;
+			defaultProject.ProxyPassword = tbProxyPassword.Text;
 
 			return settings;
 		}
@@ -195,6 +232,44 @@ namespace NotesOblitus
 			return ValidOption(pvalue)
 				? Decimal.Parse(pvalue)
 				: (ValidOption(dvalue) ? Decimal.Parse(dvalue) : fallbackValue);
+		}
+
+		private static bool GetBoolFromOption(DefaultProject defaultOptions, string member)
+		{
+#if DEBUG
+			string dvalue = null;
+			try
+			{
+				dvalue = (string)defaultOptions.GetType().GetProperty(member).GetValue(defaultOptions);
+			}
+			catch (Exception e)
+			{
+				Debug.Fail(e.ToString());
+			}
+#else
+			var dvalue = (string)defaultOptions.GetType().GetProperty(member).GetValue(defaultOptions);
+#endif
+
+			return ValidOption(dvalue) && Boolean.Parse(dvalue);
+		}
+
+		private static string GetStringFromOption(DefaultProject defaultOptions, string member)
+		{
+#if DEBUG
+			string dvalue = null;
+			try
+			{
+				dvalue = (string)defaultOptions.GetType().GetProperty(member).GetValue(defaultOptions);
+			}
+			catch (Exception e)
+			{
+				Debug.Fail(e.ToString());
+			}
+#else
+			var dvalue = (string)defaultOptions.GetType().GetProperty(member).GetValue(defaultOptions);
+#endif
+
+			return ValidOption(dvalue) ? dvalue : "";
 		}
 
 		private static bool ValidOption(string value)
@@ -317,6 +392,54 @@ namespace NotesOblitus
 			var newtags = _manager.InvertTagFilter(cbFiltersTags.Items);
 			cbFiltersTags.Items.Clear();
 			cbFiltersTags.Items.AddRange(newtags.ToArray<object>());
+		}
+
+		private void cProxyUseProxy_CheckedChanged(object sender, EventArgs e)
+		{
+			var check = cProxyUseProxy.Checked;
+			tbProxyAddress.Enabled = check;
+			tbProxyPort.Enabled = check;
+			cProxyShowPwd.Enabled = check;
+			tbProxyUsername.Enabled = check;
+			tbProxyPassword.Enabled = check;
+			cProxyDefaultProxy.Enabled = check;
+			if (!cProxyDefaultProxy.Enabled)
+				cProxyDefaultCreds.Enabled = check;
+		}
+
+		private void cProxyDefaultProxy_EnabledChanged(object sender, EventArgs e)
+		{
+			if (cProxyDefaultProxy.Enabled)
+				cProxyDefaultProxy_CheckedChanged(sender, e);
+		}
+
+		private void cProxyDefaultProxy_CheckedChanged(object sender, EventArgs e)
+		{
+			var check = !cProxyDefaultProxy.Checked;
+			tbProxyAddress.Enabled = check;
+			tbProxyPort.Enabled = check;
+			cProxyShowPwd.Enabled = check;
+			tbProxyUsername.Enabled = check;
+			tbProxyPassword.Enabled = check;
+			cProxyDefaultCreds.Enabled = check;
+		}
+
+		private void cProxyDefaultCreds_EnabledChanged(object sender, EventArgs e)
+		{
+			if (cProxyDefaultCreds.Enabled)
+				cProxyDefaultCreds_CheckedChanged(sender, e);
+		}
+
+		private void cProxyDefaultCreds_CheckedChanged(object sender, EventArgs e)
+		{
+			var check = !cProxyDefaultCreds.Checked;
+			tbProxyUsername.Enabled = check;
+			tbProxyPassword.Enabled = check;
+		}
+
+		private void cProxyShowPwd_CheckedChanged(object sender, EventArgs e)
+		{
+			tbProxyPassword.UseSystemPasswordChar = !cProxyShowPwd.Checked;
 		}
 	}
 }

@@ -76,5 +76,45 @@
 		/// Last five paths searched.
 		/// </summary>
 		public string[] RecentSearchPaths { get; set; }
+
+		/// <summary>
+		/// Whether or not proxy settings should be used.
+		/// </summary>
+		public string UseProxy { get; set; }
+
+		/// <summary>
+		/// Whether or not to use default proxy settings.
+		/// </summary>
+		public string UseDefaultProxy { get; set; }
+
+		/// <summary>
+		/// Proxy address.
+		/// </summary>
+		public string ProxyAddress { get; set; }
+
+		/// <summary>
+		/// Proxy address' port.
+		/// </summary>
+		public string ProxyPort { get; set; }
+
+		/// <summary>
+		/// Whether or not to use default proxy credentials.
+		/// </summary>
+		public string UseDefaultCredentials { get; set; }
+
+		/// <summary>
+		/// Whether or not to show the password.
+		/// </summary>
+		public string ShowPassword { get; set; }
+
+		/// <summary>
+		/// Proxy username.
+		/// </summary>
+		public string ProxyUsername { get; set; }
+
+		/// <summary>
+		/// Proxy password.
+		/// </summary>
+		public string ProxyPassword { get; set; }
 	}
 }
