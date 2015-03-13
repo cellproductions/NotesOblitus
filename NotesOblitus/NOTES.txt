@@ -13,6 +13,8 @@ TODO:
 
 BUGS:
 - preview doesnt catch all syntax cases (numbers starting with 0x, or some cases involving notes, not to mention some from other languages. should simplify it)
+- sometimes scanning a directory from File->Scan Directory doesnt add a path to the recent search paths list (either the File->recent searches or the Project.RecentSearches)
+- scanning a directory by pressing a recent search path does not quite update the current view
 
 TEST:
 - make sure the patcher also runs in elevated mode when started from the main app in elevated mode
