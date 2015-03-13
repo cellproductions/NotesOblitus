@@ -1213,7 +1213,7 @@ namespace NotesOblitus
 		{
 			var dialog = new AboutDialog
 			{
-				Message = '\n' + GlobalVars.ApplicationTitle + "\nby Callum Nichols " + 'Ⓒ' + " 2014\n\nVersion " + GlobalVars.ApplicationVersion,
+				Message = '\n' + GlobalVars.ApplicationTitle + "\nby Callum Nichols " + 'Ⓒ' + " 2015\n\nVersion " + GlobalVars.ApplicationVersion,
 				LicensePath = LicenseFileName
 			};
 			dialog.ShowDialog(Owner);
