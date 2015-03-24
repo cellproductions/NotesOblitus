@@ -10,7 +10,7 @@ namespace NotesOblitus
 	{
 		readonly NotesOblitusManager _manager;
 
-		public NotesOblitusApp(string entryPath)
+		public NotesOblitusApp(string[] args)
 		{
 			InitializeComponent();
 			niMainNotify.Text = GlobalVars.ApplicationTitle + ' ' + GlobalVars.ApplicationVersion;

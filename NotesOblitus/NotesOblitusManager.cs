@@ -11,6 +11,7 @@ using System.Threading;
 using System.Windows.Forms;
 using Global;
 using Newtonsoft.Json;
+using NotesOblitus.Controls;
 using NotesOblitus.Exporters;
 using NotesOblitus.ResourceDefaults;
 using Timer = System.Timers.Timer;
@@ -46,6 +47,12 @@ namespace NotesOblitus
 			public DirectoryStatistic DirectoryData { get; set; }
 		}
 
+		private class ParsedArg
+		{
+			public string Path { get; set; }
+			public bool IsProjectFile { get; set; }
+		}
+
 		private class SearchPath
 		{
 			public string Path { get; set; }
@@ -57,29 +64,32 @@ namespace NotesOblitus
 		public static readonly string HelpDirectory = Application.StartupPath + "\\Help";
 		private const string LicenseFileName = "license.txt";
 		private const string HelpIndexFileName = "index.html";
-		private const string DefaultPrjFileName = "default.noprj";
+		private const string AppSettingsFileName = "config.cgf";
+		//private const string DefaultPrjFileName = "default.noprj";
 		private const string ProjectExtension = ".noprj";
 		private const int RecentItemsLimit = 5;
 
 		public NotesOblitusApp Owner { get; internal set; }
 		public ViewMode CurrentViewMode { get; set; }
-		public DefaultProject DefaultProject { get; set; }
-		public Project CurrentProject { get; internal set; }
+		public AppSettings Settings { get; set; }
+		public List<Project2> OpenProjects { get; set; } 
+		//public DefaultProject DefaultProject { get; set; }
+		//public Project CurrentProject { get; internal set; }
 		public Note SelectedNote { get; set; }
 		public bool AutoScan { get; internal set; }
 		public bool IsScanning { get; internal set; }
 		public bool IsUpdatingView { get; internal set; }
-		public string EntryArgs { get; internal set; }
+		public string[] EntryArgs { get; internal set; }
 		private readonly List<Note> _notes = new List<Note>();
 		private readonly HashSet<string> _tags = new HashSet<string>();
 		private readonly StatisticsData _allStatisticsData = new StatisticsData();
-		private bool _defaultPrjLoaded = true;
+		//private bool _defaultPrjLoaded = true;
 		private readonly object _autoLock = new object();
 		private readonly Timer _autoTimer = new Timer();
 		private Thread _updateThread; // this thread is kept alive on close so it can finish the update
 		private bool _updateAvailable;
 
-		public NotesOblitusManager(NotesOblitusApp owner, string entryArgs) /** TODO(change) should add default constants for some options, then replace those values */
+		public NotesOblitusManager(NotesOblitusApp owner, string[] entryArgs) /** TODO(change) should add default constants for some options, then replace those values */
 		{
 			Owner = owner;
 			CurrentViewMode = ViewMode.ListView;
@@ -159,8 +169,56 @@ namespace NotesOblitus
 				File.WriteAllText(DefaultPrjFileName, MissingResources.GetDefaultPrjAsString());
 		}
 
-		private static OpenMode ParseArg(ref string entryPath)
+		private static IEnumerable<ParsedArg> ParseArgs(IList<string> args)
 		{
+
+#if DEBUG
+			Debug.Assert(args != null);
+#endif
+			var errlist = new List<Exception>();
+			var arglist = new List<ParsedArg>();
+			for (var i = 0; i < args.Count; ++i)
+			{
+				args[i] = args[i].Trim();
+				if (args[i].Length <= 0)
+					continue;
+
+				args[i] = args[i].Replace('/', '\\');
+				if (args[i][args[i].Length - 1] == '\\' || args[i][args[i].Length - 1] == '"') // '"' common mistake when passing path wrapped in quotation marks
+					args[i] = args[i].Substring(0, args[i].Length - 1).Trim();
+
+				try
+				{
+					args[i] = Path.GetFullPath(args[i]);
+
+					if (args[i].EndsWith(ProjectExtension))
+					{
+						if (!File.Exists(args[i]))
+							throw new Exception("File " + args[i] + " does not exist!");
+						arglist.Add(new ParsedArg { Path = args[i], IsProjectFile = true });
+						continue;
+					}
+
+					if (!Directory.Exists(args[i]))
+						throw new Exception("Directory " + args[i] + " does not exist!");
+					arglist.Add(new ParsedArg { Path = args[i], IsProjectFile = true });
+				}
+				catch (Exception e)
+				{
+					errlist.Add(e);
+				}
+			}
+
+			if (errlist.Count <= 0) 
+				return arglist;
+
+			var output = "Errors were found in the arguments:" + Environment.NewLine;
+			output += errlist.Aggregate(output, (current, exception) => current + 
+				(exception.Message + Environment.NewLine));
+			MessageBox.Show(output, @"Argument Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+			return arglist;
+#if false
 #if DEBUG
 			Debug.Assert(entryPath != null);
 #endif
@@ -177,15 +235,54 @@ namespace NotesOblitus
 			if (!entryPath.Contains("\\"))
 				entryPath = ProjectDirectory + '\\' + entryPath;
 			return File.Exists(entryPath) ? OpenMode.FromProject : OpenMode.Invalid;
+#endif
 		}
 
-		public string LoadAndSetupOptions()
+		public string LoadAndSetupOptions(TabControl projectsControl)
 		{
+			CreateDefaultPaths();
+			Settings = JsonConvert.DeserializeObject<AppSettings>(File.ReadAllText(AppSettingsFileName));
+
+			var args = ParseArgs(EntryArgs);
+			foreach (var arg in args)
+			{
+				if (arg.IsProjectFile)
+				{
+					var prjsettings = JsonConvert.DeserializeObject<ProjectSettings>(File.ReadAllText(arg.Path));
+					var view = new ProjectPage
+					{
+						Dock = DockStyle.Fill
+					};
+					var project = new Project2(prjsettings, view);
+
+					view.SearchPathChanged += (sender, eventArgs) =>
+					{
+						prjsettings.LastSearchPath = eventArgs.Path.Trim();
+					};
+
+					view.SearchPathActivated += (sender, eventArgs) =>
+					{
+						/** TODO(incomplete) start scanning the path */
+					};
+					
+					if (!string.IsNullOrEmpty(prjsettings.LastSearchPath))
+						view.SearchPath = prjsettings.LastSearchPath;
+
+					OpenProjects.Add(project);
+					var page = new TabPage(GetFolderName(arg.Path)); 
+					page.Controls.Add(view);
+					projectsControl.TabPages.Add(page);
+					continue;
+				}
+
+
+			}
+#if false
 			CreateDefaultPaths();
 			DefaultProject = JsonConvert.DeserializeObject<DefaultProject>(File.ReadAllText(DefaultPrjFileName));
 
 			var entryPath = EntryArgs;
-			var openmode = ParseArg(ref entryPath);
+			var openmode = ParseArgs(ref entryPath);
 			switch (openmode)
 			{
 				case OpenMode.FromPath:
@@ -228,6 +325,7 @@ namespace NotesOblitus
 			Owner.Text += @" - " + GetFolderName(DefaultProject.LastProject);
 
 			return CurrentProject.LastSearchPath;
+#endif
 		}
 
 		public void CheckForUpdates(bool manualCheck, bool notify, bool wait)

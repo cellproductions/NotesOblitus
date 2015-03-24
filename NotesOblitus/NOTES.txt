@@ -6,6 +6,17 @@ TODO:
 - add priority options for tags (they can be coloured in the main view as well)
 - links to sites or whatever (sensitive stuff) should be md5 hashed
 - create a status bar or something that tells the user when they have saved, etc.
+- create a projects tab control and put all open projects inside that (max of 1 instance of the program running at a time)
+	- thread the scanning of each project when first opening the app (from command line or settings), maybe add an update window
+	- no longer need a default.noprj, replace with some app settings
+	- no longer need DefaultProject, replace with some simple app settings
+	- add a save all button to save all projects at the same time
+	- default settings should be saved after closing the options window
+	- default settings should include a list of all previously opened projects, check for non-existing ones as well
+	- updating no longer needs to check for multiple instances of the app running (only 1 at a time)
+	- add right click drop-down for project tabs for things like preferences and what not
+	- allow drag+drop of a .noprj file into the projects tab control to open a project
+	- rename Project2 to Project once Project is deprecated
 
 - mention version details in the help
 - add changelog + license to the Help section
