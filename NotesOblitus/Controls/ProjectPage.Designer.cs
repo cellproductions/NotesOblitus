@@ -146,7 +146,7 @@
 			this.tpTree.Controls.Add(this.tvListNotes);
 			this.tpTree.Location = new System.Drawing.Point(4, 22);
 			this.tpTree.Name = "tpTree";
-			this.tpTree.Size = new System.Drawing.Size(770, 481);
+			this.tpTree.Size = new System.Drawing.Size(531, 368);
 			this.tpTree.TabIndex = 1;
 			this.tpTree.Text = "tpTree";
 			this.tpTree.UseVisualStyleBackColor = true;
@@ -157,15 +157,15 @@
 			this.tvListNotes.Location = new System.Drawing.Point(0, 0);
 			this.tvListNotes.Name = "tvListNotes";
 			this.tvListNotes.ShowNodeToolTips = true;
-			this.tvListNotes.Size = new System.Drawing.Size(770, 481);
+			this.tvListNotes.Size = new System.Drawing.Size(531, 368);
 			this.tvListNotes.TabIndex = 0;
 			// 
-			// ProjecPage
+			// ProjectPage
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.Controls.Add(this.tableLayoutPanel1);
-			this.Name = "ProjecPage";
+			this.Name = "ProjectPage";
 			this.Size = new System.Drawing.Size(545, 425);
 			this.tableLayoutPanel1.ResumeLayout(false);
 			this.tableLayoutPanel1.PerformLayout();

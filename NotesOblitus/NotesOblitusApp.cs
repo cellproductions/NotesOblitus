@@ -182,6 +182,7 @@ namespace NotesOblitus
 			_manager.ShowAboutDialog();
 		}
 
+#if false
 		private void tbInitialPath_KeyDown(object sender, KeyEventArgs e)
 		{
 			if (e.KeyCode != Keys.Enter)
@@ -224,6 +225,7 @@ namespace NotesOblitus
 				tvListNotes_AfterSelect(null, null);
 			}
 		}
+#endif
 
 		private void dgListNotes_SelectionChanged(object sender, EventArgs e)
 		{
@@ -246,6 +248,8 @@ namespace NotesOblitus
 
 		private void dgListNotes_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
 		{
+			if (e.Button != MouseButtons.Left)
+				return;
 			_manager.OpenPreviewDialog(dgListNotes);
 		}
 
@@ -267,6 +271,8 @@ namespace NotesOblitus
 
 		private void tvListNotes_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
 		{
+			if (e.Button != MouseButtons.Left)
+				return;
 			if (e.Node.Tag != null)
 				_manager.OpenPreviewDialog(tvListNotes);
 		}

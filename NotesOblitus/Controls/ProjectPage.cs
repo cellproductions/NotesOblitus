@@ -20,9 +20,14 @@ namespace NotesOblitus.Controls
 			{
 				tbInitialPath.Text = value;
 				if (SearchPathChanged != null)
-					SearchPathChanged(tbInitialPath, new SearchPathEventArgs 
-					{ Path = tbInitialPath.Text });
+					SearchPathChanged(tbInitialPath, new SearchPathEventArgs { Path = tbInitialPath.Text });
 			}
+		}
+		public Control CurrentView { get; internal set; }
+		public ViewMode CurrentMode
+		{
+			get { return CurrentView == dgListNotes ? ViewMode.ListView : ViewMode.TreeView; }
+			set { htcMainView.SelectedIndex = value == ViewMode.ListView ? 0 : 1; }
 		}
 
 		public event SearchPathChangedEvent SearchPathChanged;
@@ -32,11 +37,30 @@ namespace NotesOblitus.Controls
 		{
 			InitializeComponent();
 
+			tbInitialPath.KeyDown += (sender, args) =>
+			{
+				if (args.KeyCode != Keys.Enter)
+					return;
+
+				args.Handled = true;
+				args.SuppressKeyPress = true;
+			};
+
 			tbInitialPath.KeyUp += (sender, args) =>
 			{
+				if (args.KeyCode != Keys.Enter)
+					return;
+
 				if (SearchPathActivated != null)
-					SearchPathActivated(tbInitialPath, new SearchPathEventArgs 
-					{ Path = tbInitialPath.Text });
+					SearchPathActivated(tbInitialPath, new SearchPathEventArgs { Path = tbInitialPath.Text });
+
+				args.Handled = true;
+				args.SuppressKeyPress = true;
+			};
+
+			htcMainView.SelectedIndexChanged += (sender, args) =>
+			{
+				CurrentView = htcMainView.SelectedIndex == 0 ? (Control)dgListNotes : tvListNotes;
 			};
 		}
 	}

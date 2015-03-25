@@ -70,7 +70,7 @@ namespace NotesOblitus
 		private const int RecentItemsLimit = 5;
 
 		public NotesOblitusApp Owner { get; internal set; }
-		public ViewMode CurrentViewMode { get; set; }
+		//public ViewMode CurrentViewMode { get; set; }
 		public AppSettings Settings { get; set; }
 		public List<Project2> OpenProjects { get; set; } 
 		//public DefaultProject DefaultProject { get; set; }
@@ -249,7 +249,7 @@ namespace NotesOblitus
 				if (arg.IsProjectFile)
 				{
 					var prjsettings = JsonConvert.DeserializeObject<ProjectSettings>(File.ReadAllText(arg.Path));
-					var view = new ProjectPage
+					var view = new ProjectPage /** TODO(refactor) move view creation into a private function */
 					{
 						Dock = DockStyle.Fill
 					};
@@ -263,6 +263,12 @@ namespace NotesOblitus
 					view.SearchPathActivated += (sender, eventArgs) =>
 					{
 						/** TODO(incomplete) start scanning the path */
+						if (AutoScan) 
+							return;
+
+						ScanAndCollectNotes();
+						if (view.Visible)
+							UpdateCurrentView(view.CurrentView);
 					};
 					
 					if (!string.IsNullOrEmpty(prjsettings.LastSearchPath))

@@ -76,6 +76,12 @@
       <DependentUpon>AboutDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="AboutDialogManager.cs" />
+    <Compile Include="Controls\EditableTabControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\EditableTabControl.designer.cs">
+      <DependentUpon>EditableTabControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\HiddenTabControl.cs">
       <SubType>Component</SubType>
     </Compile>

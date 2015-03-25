@@ -70,7 +70,7 @@ namespace NotesOblitus
 			this.miNotifyAuto = new System.Windows.Forms.ToolStripMenuItem();
 			this.miNotifyAbout = new System.Windows.Forms.ToolStripMenuItem();
 			this.miNotifyExit = new System.Windows.Forms.ToolStripMenuItem();
-			this.tcProjects = new System.Windows.Forms.TabControl();
+			this.tcProjects = new EditableTabControl();
 			this.msMainMenu.SuspendLayout();
 			this.msNotifyMenu.SuspendLayout();
 			this.SuspendLayout();
@@ -437,7 +437,7 @@ namespace NotesOblitus
 		private System.Windows.Forms.ToolStripMenuItem miFileAutoRefresh;
 		private System.Windows.Forms.ToolStripMenuItem miFileRecentProjects;
 		private System.Windows.Forms.ToolStripMenuItem miFileRecentSearches;
-		private System.Windows.Forms.TabControl tcProjects;
+		private EditableTabControl tcProjects;
 	}
 }
 

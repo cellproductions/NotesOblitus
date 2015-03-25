@@ -1,6 +1,6 @@
 ﻿namespace NotesOblitus
 {
-	enum ViewMode
+	public enum ViewMode
 	{
 		ListView,
 		TreeView
