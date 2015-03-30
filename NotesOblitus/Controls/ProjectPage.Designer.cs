@@ -69,6 +69,8 @@
 			this.tbInitialPath.PlaceHolder = "Project search path";
 			this.tbInitialPath.Size = new System.Drawing.Size(539, 20);
 			this.tbInitialPath.TabIndex = 0;
+			this.tbInitialPath.KeyDown += new System.Windows.Forms.KeyEventHandler(this.tbInitialPath_KeyDown);
+			this.tbInitialPath.KeyUp += new System.Windows.Forms.KeyEventHandler(this.tbInitialPath_KeyUp);
 			// 
 			// htcMainView
 			// 
@@ -80,6 +82,7 @@
 			this.htcMainView.SelectedIndex = 0;
 			this.htcMainView.Size = new System.Drawing.Size(539, 394);
 			this.htcMainView.TabIndex = 1;
+			this.htcMainView.SelectedIndexChanged += new System.EventHandler(this.htcMainView_SelectedIndexChanged);
 			// 
 			// tpTable
 			// 
@@ -114,6 +117,9 @@
 			this.dgListNotes.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
 			this.dgListNotes.Size = new System.Drawing.Size(531, 368);
 			this.dgListNotes.TabIndex = 0;
+			this.dgListNotes.CellMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dgListNotes_CellMouseClick);
+			this.dgListNotes.CellMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dgListNotes_CellMouseDoubleClick);
+			this.dgListNotes.SelectionChanged += new System.EventHandler(this.dgListNotes_SelectionChanged);
 			// 
 			// cFile
 			// 
@@ -159,6 +165,9 @@
 			this.tvListNotes.ShowNodeToolTips = true;
 			this.tvListNotes.Size = new System.Drawing.Size(531, 368);
 			this.tvListNotes.TabIndex = 0;
+			this.tvListNotes.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.tvListNotes_AfterSelect);
+			this.tvListNotes.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.tvListNotes_NodeMouseClick);
+			this.tvListNotes.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.tvListNotes_NodeMouseDoubleClick);
 			// 
 			// ProjectPage
 			// 

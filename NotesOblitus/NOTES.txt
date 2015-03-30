@@ -17,6 +17,7 @@ TODO:
 	- add right click drop-down for project tabs for things like preferences and what not
 	- allow drag+drop of a .noprj file into the projects tab control to open a project
 	- rename Project2 to Project once Project is deprecated
+- give the option to open a text editor inside the preview window (replacing the preview), would work great for small editors
 
 - mention version details in the help
 - add changelog + license to the Help section

@@ -11,6 +11,7 @@ namespace NotesOblitus.Controls
 	public partial class EditableTabControl : TabControl
 	{
 		public delegate void TabEvent(object sender, TabEventArgs e);
+		public delegate void TabMouseEvent(object sender, TabMouseEventArgs e);
 
 		private TabPage _heldTab;
 
@@ -18,12 +19,17 @@ namespace NotesOblitus.Controls
 		public event TabEvent TabRemoved;
 		[Category("Behavior"), Description("Called after a tab page was added.")]
 		public event TabEvent TabAdded;
+		[Category("Mouse"), Description("Called after a mouse button is pressed over a tab.")]
+		public event TabMouseEvent TabMouseDown;
+		[Category("Mouse"), Description("Called after a mouse button is released over a tab.")]
+		public event TabMouseEvent TabMouseUp;
 
 		public EditableTabControl()
 		{
 			InitializeComponent();
 
 			MouseDown += OnMouseDown;
+			MouseUp += OnMouseUp;
 			MouseMove += OnMouseMove;
 		}
 
@@ -48,6 +54,15 @@ namespace NotesOblitus.Controls
 				return;
 			}
 			_heldTab = TabAtPoint(e.Location);
+			if (_heldTab != null && TabMouseDown != null)
+				TabMouseDown(this, new TabMouseEventArgs { Button = e.Button, Page = _heldTab });
+		}
+
+		private void OnMouseUp(object sender, MouseEventArgs e)
+		{
+			_heldTab = TabAtPoint(e.Location);
+			if (_heldTab != null && TabMouseUp != null)
+				TabMouseUp(this, new TabMouseEventArgs { Button = e.Button, Page = _heldTab });
 		}
 
 		private void OnMouseMove(object sender, MouseEventArgs e)
@@ -147,5 +162,10 @@ namespace NotesOblitus.Controls
 	public class TabEventArgs : EventArgs
 	{
 		public TabPage Page { get; set; }
+	}
+
+	public class TabMouseEventArgs : TabEventArgs
+	{
+		public MouseButtons Button { get; set; }
 	}
 }

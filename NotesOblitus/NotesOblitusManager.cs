@@ -72,10 +72,11 @@ namespace NotesOblitus
 		public NotesOblitusApp Owner { get; internal set; }
 		//public ViewMode CurrentViewMode { get; set; }
 		public AppSettings Settings { get; set; }
-		public List<Project2> OpenProjects { get; set; } 
+		public List<Project2> OpenProjects { get; set; }
+		public Project2 CurrentProject2 { get; set; } /** TODO(refactor) remove the 2 from this */
 		//public DefaultProject DefaultProject { get; set; }
 		//public Project CurrentProject { get; internal set; }
-		public Note SelectedNote { get; set; }
+		//public Note SelectedNote { get; set; }
 		public bool AutoScan { get; internal set; }
 		public bool IsScanning { get; internal set; }
 		public bool IsUpdatingView { get; internal set; }
@@ -92,7 +93,7 @@ namespace NotesOblitus
 		public NotesOblitusManager(NotesOblitusApp owner, string[] entryArgs) /** TODO(change) should add default constants for some options, then replace those values */
 		{
 			Owner = owner;
-			CurrentViewMode = ViewMode.ListView;
+			//CurrentViewMode = ViewMode.ListView;
 			EntryArgs = entryArgs;
 			_autoTimer.Elapsed += (sender, args) =>
 			{
@@ -259,7 +260,6 @@ namespace NotesOblitus
 					{
 						prjsettings.LastSearchPath = eventArgs.Path.Trim();
 					};
-
 					view.SearchPathActivated += (sender, eventArgs) =>
 					{
 						/** TODO(incomplete) start scanning the path */
@@ -270,12 +270,20 @@ namespace NotesOblitus
 						if (view.Visible)
 							UpdateCurrentView(view.CurrentView);
 					};
+					view.NoteClicked += (sender, eventArgs) =>
+					{
+						ShowViewMenu(eventArgs.Location, view);
+					};
+					view.NoteDoubleClicked += (sender, eventArgs) =>
+					{
+						OpenPreviewDialog();
+					};
 					
 					if (!string.IsNullOrEmpty(prjsettings.LastSearchPath))
 						view.SearchPath = prjsettings.LastSearchPath;
 
 					OpenProjects.Add(project);
-					var page = new TabPage(GetFolderName(arg.Path)); 
+					var page = new TabPage(GetFolderName(arg.Path)) { Tag = project };
 					page.Controls.Add(view);
 					projectsControl.TabPages.Add(page);
 					continue;
@@ -1127,18 +1135,18 @@ namespace NotesOblitus
 			currNode.ToolTipText = "Found: " + currNode.Nodes.Count;
 		}
 
-		public void OpenPreviewDialog(Control currentView)
+		public void OpenPreviewDialog()
 		{
-			if (SelectedNote == null)
+			if (CurrentProject2.Control.CurrentNote == null)
 				return;
 
 			var dialog = new PreviewDialog
 			{
-				LineCount = Int32.Parse(CurrentProject.PreviewLineCount),
-				NotePreview = SelectedNote
+				LineCount = Int32.Parse(CurrentProject2.Settings.PreviewLineCount),
+				NotePreview = CurrentProject2.Control.CurrentNote
 			};
 			dialog.OpenClicked += (sender, args) => RunEditor();
-			dialog.RemoveClicked += (sender, args) => RemoveNoteFromSource(currentView);
+			dialog.RemoveClicked += (sender, args) => RemoveNoteFromSource(CurrentProject2);
 
 			dialog.ShowDialog(Owner);
 		}
@@ -1168,52 +1176,54 @@ namespace NotesOblitus
 			Process.Start(process);
 		}
 
-		public void RemoveNoteFromSource(Control currentView)
+		public void RemoveNoteFromSource(Project2 project)
 		{
-			if (SelectedNote == null)
+			var page = project.Control;
+			if (page.CurrentNote == null)
 				return;
 
 			// chop the message down to a much more manageable number of chars
 			const int totalchars = 80;
-			var shortened = SelectedNote.Message;
+			var shortened = page.CurrentNote.Message;
 			var endlineindex = shortened.IndexOf(Environment.NewLine, StringComparison.Ordinal);
 			if (endlineindex >= 0)
 				shortened = shortened.Substring(0, endlineindex);
 			shortened = shortened.Substring(0, Math.Min(shortened.Length, totalchars));
 
 			var result = MessageBox.Show(Owner,
-				@"Are you sure you would like to delete this note:" + '\n' + @"File: " + SelectedNote.FileName + '\n' + @"Line: " + SelectedNote.Line + '\n' + shortened + @"...",
+				@"Are you sure you would like to delete this note:" + '\n' + @"File: " + page.CurrentNote.FileName + '\n' + @"Line: " + 
+				page.CurrentNote.Line + '\n' + shortened + @"...",
 				@"Remove Note", MessageBoxButtons.YesNo);
 			if (result != DialogResult.Yes)
 				return;
 
-			if (Boolean.Parse(CurrentProject.DeleteFromSource) && File.Exists(SelectedNote.FilePath))
+			if (Boolean.Parse(project.Settings.DeleteFromSource) && File.Exists(page.CurrentNote.FilePath))
 			{
-				var filetext = File.ReadAllText(SelectedNote.FilePath);
-				filetext = filetext.Replace(SelectedNote.All, ""); // the file may have changed before delete, so instead of removing by index, replace
-				File.WriteAllText(SelectedNote.FilePath, filetext);
+				var filetext = File.ReadAllText(page.CurrentNote.FilePath);
+				filetext = filetext.Replace(page.CurrentNote.All, ""); // the file may have changed before delete, so instead of removing by index, replace
+				File.WriteAllText(page.CurrentNote.FilePath, filetext);
 			}
 
 
 			lock (_autoLock)
 			{
-				if (CurrentViewMode == ViewMode.ListView)
+				if (page.CurrentMode == ViewMode.ListView)
 				{
-					var listView = (DataGridView) currentView;
+					var listView = (DataGridView)page.CurrentView;
 					_notes.RemoveAt(listView.CurrentCell.RowIndex);
 					listView.Rows.RemoveAt(listView.CurrentCell.RowIndex);
 				}
 				else
 				{
-					var treeView = (TreeView) currentView;
-					_notes.Remove(SelectedNote);
+					var treeView = (TreeView)page.CurrentView;
+					_notes.Remove(page.CurrentNote);
 					if (treeView.SelectedNode.Parent != null)
 						treeView.SelectedNode.Parent.Nodes.Remove(treeView.SelectedNode);
 					else
 						treeView.Nodes.Remove(treeView.SelectedNode);
 				}
 			}
-			SelectedNote = null;
+			page.CurrentNote = null;
 		}
 
 		public void DisplayOptionsWindow()
@@ -1321,6 +1331,24 @@ namespace NotesOblitus
 				LicensePath = LicenseFileName
 			};
 			dialog.ShowDialog(Owner);
+		}
+
+		private void ShowViewMenu(Point location, ProjectPage currentPage)
+		{
+			var menu = new ContextMenuStrip();
+			var previewItem = new ToolStripMenuItem("Preview");
+			var editItem = new ToolStripMenuItem("Edit");
+			var deleteItem = new ToolStripMenuItem("Delete");
+
+			previewItem.Click += (sender, args) => OpenPreviewDialog();
+			editItem.Click += (sender, args) => RunEditor();
+			deleteItem.Click += (sender, args) => RemoveNoteFromSource(CurrentProject2);
+
+			menu.Items.Add(previewItem);
+			menu.Items.Add(editItem);
+			menu.Items.Add(deleteItem);
+
+			menu.Show(location);
 		}
 	}
 }

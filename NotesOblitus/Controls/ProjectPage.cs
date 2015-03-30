@@ -1,4 +1,6 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Drawing;
+using System.Windows.Forms;
 
 namespace NotesOblitus.Controls
 {
@@ -9,8 +11,15 @@ namespace NotesOblitus.Controls
 			public string Path { get; set; }
 		}
 
+		public class NoteClickedEventArgs
+		{
+			public MouseButtons Button;
+			public Point Location;
+		}
+
 		public delegate void SearchPathChangedEvent(object sender, SearchPathEventArgs e);
 		public delegate void SearchPathActivatedEvent(object sender, SearchPathEventArgs e);
+		public delegate void NoteClickedEvent(object sender, NoteClickedEventArgs e);
 
 		public Project2 ProjectOwner { get; internal set; }
 		public string SearchPath
@@ -29,39 +38,116 @@ namespace NotesOblitus.Controls
 			get { return CurrentView == dgListNotes ? ViewMode.ListView : ViewMode.TreeView; }
 			set { htcMainView.SelectedIndex = value == ViewMode.ListView ? 0 : 1; }
 		}
+		public Note CurrentNote { get; internal set; }
 
 		public event SearchPathChangedEvent SearchPathChanged;
 		public event SearchPathActivatedEvent SearchPathActivated;
+		public event NoteClickedEvent NoteClicked;
+		public event NoteClickedEvent NoteDoubleClicked;
 
 		public ProjectPage()
 		{
 			InitializeComponent();
+		}
 
-			tbInitialPath.KeyDown += (sender, args) =>
+		private void tbInitialPath_KeyDown(object sender, KeyEventArgs e)
+		{
+			if (e.KeyCode != Keys.Enter)
+				return;
+
+			e.Handled = true;
+			e.SuppressKeyPress = true;
+		}
+
+		private void tbInitialPath_KeyUp(object sender, KeyEventArgs e)
+		{
+			if (e.KeyCode != Keys.Enter)
+				return;
+
+			if (SearchPathActivated != null)
+				SearchPathActivated(tbInitialPath, new SearchPathEventArgs { Path = tbInitialPath.Text });
+
+			e.Handled = true;
+			e.SuppressKeyPress = true;
+		}
+
+		private void htcMainView_SelectedIndexChanged(object sender, EventArgs e)
+		{
+			CurrentView = htcMainView.SelectedIndex == 0 ? (Control)dgListNotes : tvListNotes;
+		}
+
+		private void dgListNotes_SelectionChanged(object sender, EventArgs e)
+		{
+			if (CurrentMode != ViewMode.ListView)
+				return;
+			CurrentNote = dgListNotes.CurrentCell == null ? null : (Note)dgListNotes.CurrentCell.OwningRow.Tag;
+		}
+
+		private void dgListNotes_CellMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+		{
+			if (e.Button != MouseButtons.Right)
+				return;
+			dgListNotes.CurrentCell = dgListNotes.Rows[e.RowIndex].Cells[e.ColumnIndex];
+			dgListNotes.Rows[e.RowIndex].Selected = true;
+			CurrentNote = (Note)dgListNotes.Rows[e.RowIndex].Tag;
+
+			if (NoteClicked == null)
+				return;
+
+			var cellloc = dgListNotes.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, false).Location;
+			NoteClicked(dgListNotes, new NoteClickedEventArgs
 			{
-				if (args.KeyCode != Keys.Enter)
-					return;
+				Button = e.Button,
+				Location = dgListNotes.PointToScreen(new Point(cellloc.X + e.Location.X, cellloc.Y + e.Location.Y))
+			});
+		}
 
-				args.Handled = true;
-				args.SuppressKeyPress = true;
-			};
+		private void dgListNotes_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
+		{
+			if (e.Button != MouseButtons.Left)
+				return;
+			if (NoteDoubleClicked == null)
+				return;
 
-			tbInitialPath.KeyUp += (sender, args) =>
+			var cellloc = dgListNotes.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, false).Location;
+			NoteDoubleClicked(dgListNotes, new NoteClickedEventArgs
 			{
-				if (args.KeyCode != Keys.Enter)
-					return;
+				Button = e.Button,
+				Location = dgListNotes.PointToScreen(new Point(cellloc.X + e.Location.X, cellloc.Y + e.Location.Y))
+			});
+		}
 
-				if (SearchPathActivated != null)
-					SearchPathActivated(tbInitialPath, new SearchPathEventArgs { Path = tbInitialPath.Text });
+		private void tvListNotes_AfterSelect(object sender, TreeViewEventArgs e)
+		{
+			if (CurrentMode != ViewMode.TreeView)
+				return;
+			CurrentNote = tvListNotes.SelectedNode == null ? null : (Note)tvListNotes.SelectedNode.Tag;
+		}
 
-				args.Handled = true;
-				args.SuppressKeyPress = true;
-			};
+		private void tvListNotes_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
+		{
+			if (e.Button != MouseButtons.Right)
+				return;
 
-			htcMainView.SelectedIndexChanged += (sender, args) =>
-			{
-				CurrentView = htcMainView.SelectedIndex == 0 ? (Control)dgListNotes : tvListNotes;
-			};
+			tvListNotes.SelectedNode = e.Node;
+			if (NoteClicked != null)
+				NoteClicked(tvListNotes, new NoteClickedEventArgs
+				{
+					Button = e.Button, 
+					Location = tvListNotes.PointToScreen(e.Location)
+				});
+		}
+
+		private void tvListNotes_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
+		{
+			if (e.Button != MouseButtons.Left)
+				return;
+			if (e.Node.Tag != null && NoteDoubleClicked != null)
+				NoteDoubleClicked(tvListNotes, new NoteClickedEventArgs
+				{
+					Button = e.Button, 
+					Location = tvListNotes.PointToScreen(e.Location)
+				});
 		}
 	}
 }

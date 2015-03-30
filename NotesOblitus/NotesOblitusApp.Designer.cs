@@ -375,6 +375,7 @@ namespace NotesOblitus
 			this.tcProjects.SelectedIndex = 0;
 			this.tcProjects.Size = new System.Drawing.Size(784, 538);
 			this.tcProjects.TabIndex = 1;
+			this.tcProjects.TabMouseDown += new EditableTabControl.TabMouseEvent(tcProjects_TabMouseDown);
 			// 
 			// NotesOblitusApp
 			// 

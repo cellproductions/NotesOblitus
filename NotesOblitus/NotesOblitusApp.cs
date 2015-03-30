@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 using Global;
+using NotesOblitus.Controls;
 using NotesOblitus.Exporters;
 
 namespace NotesOblitus
@@ -154,7 +155,7 @@ namespace NotesOblitus
 
 		private void miEditPreview_Click(object sender, EventArgs e)
 		{
-			_manager.OpenPreviewDialog(_manager.CurrentViewMode == ViewMode.ListView ? (Control)dgListNotes : tvListNotes);
+			_manager.OpenPreviewDialog();
 		}
 
 		private void miEditEdit_Click(object sender, EventArgs e)
@@ -164,7 +165,7 @@ namespace NotesOblitus
 
 		private void miEditDelete_Click(object sender, EventArgs e)
 		{
-			_manager.RemoveNoteFromSource(_manager.CurrentViewMode == ViewMode.ListView ? (Control)dgListNotes : tvListNotes);
+			_manager.RemoveNoteFromSource(_manager.CurrentProject2);
 		}
 
 		private void miEditOptions_Click(object sender, EventArgs e)
@@ -180,6 +181,11 @@ namespace NotesOblitus
 		private void miAboutAbout_Click(object sender, EventArgs e)
 		{
 			_manager.ShowAboutDialog();
+		}
+
+		private void tcProjects_TabMouseDown(object sender, TabMouseEventArgs e)
+		{
+			_manager.CurrentProject2 = e.Page.Tag as Project2;
 		}
 
 #if false
@@ -225,7 +231,6 @@ namespace NotesOblitus
 				tvListNotes_AfterSelect(null, null);
 			}
 		}
-#endif
 
 		private void dgListNotes_SelectionChanged(object sender, EventArgs e)
 		{
@@ -276,6 +281,7 @@ namespace NotesOblitus
 			if (e.Node.Tag != null)
 				_manager.OpenPreviewDialog(tvListNotes);
 		}
+#endif
 
 		private void msNotifyMenu_Opening(object sender, System.ComponentModel.CancelEventArgs e)
 		{
