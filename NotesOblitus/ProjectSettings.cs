@@ -7,6 +7,10 @@
 		/// </summary>
 		public string DeleteFromSource { get; set; }
 		/// <summary>
+		/// Automatically scan and update in the background.
+		/// </summary>
+		public string AutoScan { get; set; }
+		/// <summary>
 		/// How many dirs to search through depth wise (0 means search top dir only).
 		/// </summary>
 		public string SearchDepth { get; set; }

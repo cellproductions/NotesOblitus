@@ -77,7 +77,7 @@ namespace NotesOblitus
 		//public DefaultProject DefaultProject { get; set; }
 		//public Project CurrentProject { get; internal set; }
 		//public Note SelectedNote { get; set; }
-		public bool AutoScan { get; internal set; }
+		//public bool AutoScan { get; internal set; }
 		public bool IsScanning { get; internal set; }
 		public bool IsUpdatingView { get; internal set; }
 		public string[] EntryArgs { get; internal set; }
@@ -85,8 +85,8 @@ namespace NotesOblitus
 		private readonly HashSet<string> _tags = new HashSet<string>();
 		private readonly StatisticsData _allStatisticsData = new StatisticsData();
 		//private bool _defaultPrjLoaded = true;
-		private readonly object _autoLock = new object();
-		private readonly Timer _autoTimer = new Timer();
+		//private readonly object _autoLock = new object();
+		//private readonly Timer _autoTimer = new Timer();
 		private Thread _updateThread; // this thread is kept alive on close so it can finish the update
 		private bool _updateAvailable;
 
@@ -95,7 +95,7 @@ namespace NotesOblitus
 			Owner = owner;
 			//CurrentViewMode = ViewMode.ListView;
 			EntryArgs = entryArgs;
-			_autoTimer.Elapsed += (sender, args) =>
+			_autoTimer.Elapsed += (sender, args) => /** TODO(refactor) this needs to exist for each project really  */
 			{
 				if (!AutoScan)
 					return;
@@ -166,8 +166,8 @@ namespace NotesOblitus
 				File.WriteAllText(LicenseFileName, MissingResources.GetLicenseFileAsString());
 			if (!File.Exists(SyntaxFileName))
 				File.WriteAllText(SyntaxFileName, MissingResources.GetSyntaxFileAsString());
-			if (!File.Exists(DefaultPrjFileName))
-				File.WriteAllText(DefaultPrjFileName, MissingResources.GetDefaultPrjAsString());
+			//if (!File.Exists(DefaultPrjFileName))
+			//	File.WriteAllText(DefaultPrjFileName, MissingResources.GetDefaultPrjAsString());
 		}
 
 		private static IEnumerable<ParsedArg> ParseArgs(IList<string> args)
@@ -239,58 +239,19 @@ namespace NotesOblitus
 #endif
 		}
 
-		public string LoadAndSetupOptions(TabControl projectsControl)
+		public void LoadAndSetupOptions(TabControl projectsControl)
 		{
 			CreateDefaultPaths();
 			Settings = JsonConvert.DeserializeObject<AppSettings>(File.ReadAllText(AppSettingsFileName));
 
 			var args = ParseArgs(EntryArgs);
-			foreach (var arg in args)
-			{
-				if (arg.IsProjectFile)
-				{
-					var prjsettings = JsonConvert.DeserializeObject<ProjectSettings>(File.ReadAllText(arg.Path));
-					var view = new ProjectPage /** TODO(refactor) move view creation into a private function */
-					{
-						Dock = DockStyle.Fill
-					};
-					var project = new Project2(prjsettings, view);
+			CreateAndAddProjects(projectsControl, args);
 
-					view.SearchPathChanged += (sender, eventArgs) =>
-					{
-						prjsettings.LastSearchPath = eventArgs.Path.Trim();
-					};
-					view.SearchPathActivated += (sender, eventArgs) =>
-					{
-						/** TODO(incomplete) start scanning the path */
-						if (AutoScan) 
-							return;
+			if (Settings.OpenProjects == null)
+				return;
 
-						ScanAndCollectNotes();
-						if (view.Visible)
-							UpdateCurrentView(view.CurrentView);
-					};
-					view.NoteClicked += (sender, eventArgs) =>
-					{
-						ShowViewMenu(eventArgs.Location, view);
-					};
-					view.NoteDoubleClicked += (sender, eventArgs) =>
-					{
-						OpenPreviewDialog();
-					};
-					
-					if (!string.IsNullOrEmpty(prjsettings.LastSearchPath))
-						view.SearchPath = prjsettings.LastSearchPath;
-
-					OpenProjects.Add(project);
-					var page = new TabPage(GetFolderName(arg.Path)) { Tag = project };
-					page.Controls.Add(view);
-					projectsControl.TabPages.Add(page);
-					continue;
-				}
-
-
-			}
+			args = ParseArgs(Settings.OpenProjects);
+			CreateAndAddProjects(projectsControl, args);
 #if false
 			CreateDefaultPaths();
 			DefaultProject = JsonConvert.DeserializeObject<DefaultProject>(File.ReadAllText(DefaultPrjFileName));
@@ -342,12 +303,100 @@ namespace NotesOblitus
 #endif
 		}
 
+		private void CreateAndAddProjects(TabControl projectsControl, IEnumerable<ParsedArg> args)
+		{
+			foreach (var arg in args)
+			{
+				var prjsettings = arg.IsProjectFile ? JsonConvert.DeserializeObject<ProjectSettings>(File.ReadAllText(arg.Path)) :
+					CreateSettingsFromTemplate(new ProjectSettings { LastSearchPath = arg.Path });
+				var view = CreateProjectView(prjsettings);
+				var project = new Project2(prjsettings, view);
+
+				OpenProjects.Add(project);
+				var page = new TabPage(GetFolderName(arg.Path)) { Tag = project };
+				page.Controls.Add(view);
+				projectsControl.TabPages.Add(page);
+			}
+		}
+
+		private static ProjectSettings CreateSettingsFromTemplate(ProjectSettings copy)
+		{
+			var project = CreateDefaultSettings();
+
+			if (copy == null)
+				return project;
+
+			foreach (var property in copy.GetType().GetProperties())
+			{
+				var value = property.GetValue(copy);
+				if (value == null)
+					continue;
+
+				if (value is string)
+				{
+					if ((value as string).Length > 0)
+						property.SetValue(project, value);
+				}
+				else
+					property.SetValue(project, value);
+			}
+
+			return project;
+		}
+
+		private static ProjectSettings CreateDefaultSettings()
+		{
+			return new ProjectSettings
+			{
+				DeleteFromSource = "False",
+				AutoScan = "False",
+				SearchDepth = "2",
+				LastSearchPath = "",
+				SearchInterval = "10",
+				PreviewLineCount = "20",
+				NoteOpen = "/** TODO",
+				NoteClose = "*/",
+				Editor = "",
+				EditorArgs = "",
+				FilterTags = "False",
+				TagFilter = null,
+				FileTypes = null,
+				PathFilter = null
+			};
+		}
+
+		private ProjectPage CreateProjectView(ProjectSettings settings)
+		{
+			var view = new ProjectPage /** TODO(refactor) move view creation into a private function */
+			{
+				Dock = DockStyle.Fill
+			};
+
+			view.SearchPathChanged += (sender, eventArgs) => settings.LastSearchPath = eventArgs.Path.Trim();
+			view.SearchPathActivated += (sender, eventArgs) =>
+			{
+				if (!string.IsNullOrEmpty(settings.AutoScan) && bool.Parse(settings.AutoScan))
+					return;
+
+				ScanAndCollectNotes();
+				if (view.Visible)
+					UpdateCurrentView(view.CurrentView);
+			};
+			view.NoteClicked += (sender, eventArgs) => ShowViewMenu(eventArgs.Location, view);
+			view.NoteDoubleClicked += (sender, eventArgs) => OpenPreviewDialog();
+
+			if (!string.IsNullOrEmpty(settings.LastSearchPath))
+				view.SearchPath = settings.LastSearchPath;
+
+			return view;
+		}
+
 		public void CheckForUpdates(bool manualCheck, bool notify, bool wait)
 		{
 			/** TODO(incomplete) this should be done on another thread. if the mode is set to none, dont check. otherwise, ask or auto update (still on another thread) */
-			if (!manualCheck && String.IsNullOrEmpty(CurrentProject.UpdateMode))
+			if (!manualCheck && String.IsNullOrEmpty(Settings.UpdateMode))
 			{
-				CurrentProject.UpdateMode = UpdateStyle.None.ToString();
+				Settings.UpdateMode = UpdateStyle.None.ToString();
 				return;
 			}
 
@@ -366,11 +415,11 @@ namespace NotesOblitus
 				var manualcheck = (bool)((object[])param)[0];
 				var notify = (bool)((object[])param)[1];
 
-				var update = UpdateStyle.None.Parse(CurrentProject.UpdateMode);
+				var update = UpdateStyle.None.Parse(Settings.UpdateMode);
 				if (!manualcheck && update == UpdateStyle.None)
 					return;
 
-				var updater = CreateUpdater(!string.IsNullOrEmpty(DefaultProject.UseProxy) && Boolean.Parse(DefaultProject.UseProxy));
+				var updater = CreateUpdater(!string.IsNullOrEmpty(Settings.UseProxy) && Boolean.Parse(Settings.UseProxy));
 				Dictionary<string, Version> newversions;
 				var updates = updater.AreUpdatesAvailable(Version.Parse(GlobalVars.ApplicationVersion), out newversions);
 				if (!updates["Application"]) /** TODO(incomplete) if the patcher/manifest needs updating, request a manual download */
@@ -461,7 +510,7 @@ namespace NotesOblitus
 					};
 					Process.Start(process);
 				};
-				_defaultPrjLoaded = false;
+				//_defaultPrjLoaded = false;
 				// this will stop this instance of the app from saving the default settings (will get saved on restart)
 				ExitApplication(true);
 			}
@@ -476,18 +525,20 @@ namespace NotesOblitus
 		private Updater CreateUpdater(bool useProxy) /** TODO(change) this path should be hashed */
 		{
 			return new Updater("https://dl.dropboxusercontent.com/u/28551411/NotesOblitus/", useProxy, !useProxy ? null :
-					(!string.IsNullOrEmpty(DefaultProject.UseDefaultProxy) && Boolean.Parse(DefaultProject.UseDefaultProxy) ? (WebProxy)WebRequest.DefaultWebProxy :
+					(!string.IsNullOrEmpty(Settings.UseDefaultProxy) && Boolean.Parse(Settings.UseDefaultProxy) ? (WebProxy)WebRequest.DefaultWebProxy :
 					new WebProxy
 					{
-						Address = new Uri(DefaultProject.ProxyAddress + ':' + DefaultProject.ProxyPort),
-						UseDefaultCredentials = !string.IsNullOrEmpty(DefaultProject.UseDefaultCredentials) && Boolean.Parse(DefaultProject.UseDefaultCredentials),
+						Address = new Uri(Settings.ProxyAddress + ':' + Settings.ProxyPort),
+						UseDefaultCredentials = !string.IsNullOrEmpty(Settings.UseDefaultCredentials) && Boolean.Parse(Settings.UseDefaultCredentials),
 						Credentials = new NetworkCredential(
-							!string.IsNullOrEmpty(DefaultProject.ProxyUsername) ? DefaultProject.ProxyUsername : "",
-							!string.IsNullOrEmpty(DefaultProject.ProxyPassword) ? DefaultProject.ProxyPassword : ""),
+							!string.IsNullOrEmpty(Settings.ProxyUsername) ? Settings.ProxyUsername : "",
+							!string.IsNullOrEmpty(Settings.ProxyPassword) ? Settings.ProxyPassword : ""),
 						BypassProxyOnLocal = false
 					}));
 		}
 
+		/** TODO(specific) specific to each project */
+#if 0
 		public string OpenProject()
 		{
 			var dialog = new OpenFileDialog
@@ -564,6 +615,7 @@ namespace NotesOblitus
 
 			return dialog.ShowDialog(Owner) == DialogResult.OK ? dialog.FileName : null;
 		}
+#endif
 
 		private void WriteProject(SaveMode saveMode)
 		{

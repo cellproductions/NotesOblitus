@@ -15,17 +15,18 @@ namespace NotesOblitus
 		{
 			InitializeComponent();
 			niMainNotify.Text = GlobalVars.ApplicationTitle + ' ' + GlobalVars.ApplicationVersion;
-			_manager = new NotesOblitusManager(this, entryPath);
-			var lastsearchpath = _manager.LoadAndSetupOptions();
-			tbInitialPath.Text = lastsearchpath;
+			_manager = new NotesOblitusManager(this, args);
+			_manager.LoadAndSetupOptions(tcProjects);
+			//var lastsearchpath = _manager.LoadAndSetupOptions();
+			//tbInitialPath.Text = lastsearchpath;
 		}
-
+#if 0
 		public void UpdateView()
 		{
 			if (Visible)
 				_manager.UpdateCurrentView(_manager.CurrentViewMode == ViewMode.ListView ? (Control)dgListNotes : tvListNotes);
 		}
-
+#endif
 		private void NotesOblitusApp_VisibleChanged(object sender, EventArgs e)
 		{
 			UpdateView();
