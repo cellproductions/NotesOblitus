@@ -1,6 +1,6 @@
 ﻿namespace NotesOblitus
 {
-	class AppSettings
+	public class AppSettings
 	{
 		/// <summary>
 		/// The last project that the user was looking at.

@@ -14,11 +14,11 @@ using Newtonsoft.Json;
 using NotesOblitus.Controls;
 using NotesOblitus.Exporters;
 using NotesOblitus.ResourceDefaults;
-using Timer = System.Timers.Timer;
+//using Timer = System.Timers.Timer;
 
 namespace NotesOblitus
 {
-	class NotesOblitusManager
+	class NotesOblitusManager /** TODO(threading) accessing Settings from Project2's while auto is on may cause issues */
 	{
 		// Filesystem paths are more likely to be different starting from the end of their strings.
 		public class PathComparer : IEqualityComparer<string>
@@ -51,6 +51,20 @@ namespace NotesOblitus
 		{
 			public string Path { get; set; }
 			public bool IsProjectFile { get; set; }
+
+			public override int GetHashCode()
+			{
+				unchecked
+				{
+					return ((Path != null ? Path.GetHashCode() : 0) * 397) ^ IsProjectFile.GetHashCode();
+				}
+			}
+
+			public override bool Equals(object obj)
+			{
+				var arg = obj as ParsedArg;
+				return arg != null && (Path.Equals(arg.Path) && IsProjectFile == arg.IsProjectFile);
+			}
 		}
 
 		private class SearchPath
@@ -73,7 +87,7 @@ namespace NotesOblitus
 		//public ViewMode CurrentViewMode { get; set; }
 		public AppSettings Settings { get; set; }
 		public List<Project2> OpenProjects { get; set; }
-		public Project2 CurrentProject2 { get; set; } /** TODO(refactor) remove the 2 from this */
+		//public Project2 CurrentProject2 { get; set; } /** TODO(refactor) remove the 2 from this */
 		//public DefaultProject DefaultProject { get; set; }
 		//public Project CurrentProject { get; internal set; }
 		//public Note SelectedNote { get; set; }
@@ -81,20 +95,23 @@ namespace NotesOblitus
 		public bool IsScanning { get; internal set; }
 		public bool IsUpdatingView { get; internal set; }
 		public string[] EntryArgs { get; internal set; }
-		private readonly List<Note> _notes = new List<Note>();
-		private readonly HashSet<string> _tags = new HashSet<string>();
-		private readonly StatisticsData _allStatisticsData = new StatisticsData();
+		//private readonly List<Note> _notes = new List<Note>();
+		//private readonly HashSet<string> _tags = new HashSet<string>();
+		//private readonly StatisticsData _allStatisticsData = new StatisticsData();
 		//private bool _defaultPrjLoaded = true;
 		//private readonly object _autoLock = new object();
 		//private readonly Timer _autoTimer = new Timer();
+		private readonly AutoScanScheduler _autoScheduler;
 		private Thread _updateThread; // this thread is kept alive on close so it can finish the update
 		private bool _updateAvailable;
 
 		public NotesOblitusManager(NotesOblitusApp owner, string[] entryArgs) /** TODO(change) should add default constants for some options, then replace those values */
 		{
 			Owner = owner;
+			OpenProjects = new List<Project2>();
 			//CurrentViewMode = ViewMode.ListView;
 			EntryArgs = entryArgs;
+#if false
 			_autoTimer.Elapsed += (sender, args) => /** TODO(refactor) this needs to exist for each project really  */
 			{
 				if (!AutoScan)
@@ -117,6 +134,8 @@ namespace NotesOblitus
 					}));
 				}
 			};
+#endif
+			_autoScheduler = new AutoScanScheduler(Owner);
 		}
 
 		private void CreateDefaultPaths()
@@ -191,18 +210,13 @@ namespace NotesOblitus
 				try
 				{
 					args[i] = Path.GetFullPath(args[i]);
+					var attributes = File.GetAttributes(args[i]);
 
-					if (args[i].EndsWith(ProjectExtension))
+					arglist.Add(new ParsedArg
 					{
-						if (!File.Exists(args[i]))
-							throw new Exception("File " + args[i] + " does not exist!");
-						arglist.Add(new ParsedArg { Path = args[i], IsProjectFile = true });
-						continue;
-					}
-
-					if (!Directory.Exists(args[i]))
-						throw new Exception("Directory " + args[i] + " does not exist!");
-					arglist.Add(new ParsedArg { Path = args[i], IsProjectFile = true });
+						Path = args[i],
+						IsProjectFile = (attributes & FileAttributes.Directory) != FileAttributes.Directory
+					});
 				}
 				catch (Exception e)
 				{
@@ -245,13 +259,15 @@ namespace NotesOblitus
 			Settings = JsonConvert.DeserializeObject<AppSettings>(File.ReadAllText(AppSettingsFileName));
 
 			var args = ParseArgs(EntryArgs);
-			CreateAndAddProjects(projectsControl, args);
 
-			if (Settings.OpenProjects == null)
-				return;
+			if (Settings.OpenProjects != null)
+			{
+				var prevopen = ParseArgs(Settings.OpenProjects);
+				foreach (var arg in prevopen.Where(arg => !args.Contains(arg)))
+					((List<ParsedArg>)args).Add(arg);
+			}
 
-			args = ParseArgs(Settings.OpenProjects);
-			CreateAndAddProjects(projectsControl, args);
+			AddProjectsFromArgs(projectsControl, args);
 #if false
 			CreateDefaultPaths();
 			DefaultProject = JsonConvert.DeserializeObject<DefaultProject>(File.ReadAllText(DefaultPrjFileName));
@@ -303,20 +319,73 @@ namespace NotesOblitus
 #endif
 		}
 
-		private void CreateAndAddProjects(TabControl projectsControl, IEnumerable<ParsedArg> args)
+		private void AddProjectsFromArgs(TabControl projectsControl, IEnumerable<ParsedArg> args)
 		{
 			foreach (var arg in args)
-			{
-				var prjsettings = arg.IsProjectFile ? JsonConvert.DeserializeObject<ProjectSettings>(File.ReadAllText(arg.Path)) :
-					CreateSettingsFromTemplate(new ProjectSettings { LastSearchPath = arg.Path });
-				var view = CreateProjectView(prjsettings);
-				var project = new Project2(prjsettings, view);
+				CreateAndAddProject(projectsControl, arg);
+		}
 
-				OpenProjects.Add(project);
-				var page = new TabPage(GetFolderName(arg.Path)) { Tag = project };
-				page.Controls.Add(view);
-				projectsControl.TabPages.Add(page);
-			}
+		private Project2 CreateAndAddProject(TabControl projectsControl, ParsedArg arg)
+		{
+			var prjsettings = CreateProjectSettings(arg);
+			var view = CreateProjectView(prjsettings);
+			var project = CreateProject(prjsettings, view, arg);
+
+			OpenProjects.Add(project);
+			projectsControl.TabPages.Add(view);
+
+			return project;
+		}
+
+		private Project2 CreateProject(ProjectSettings settings, ProjectPage view, ParsedArg arg)
+		{
+			var project = new Project2(settings, view) { IsProjectFile = arg.IsProjectFile };
+			if (!string.IsNullOrEmpty(settings.AutoScan) && !string.IsNullOrEmpty(settings.SearchInterval) && bool.Parse(settings.AutoScan))
+				_autoScheduler.AddTime(int.Parse(settings.SearchInterval) * 1000, (sender, eventArgs) =>
+				{
+					if (string.IsNullOrEmpty(settings.LastSearchPath))
+						return;
+					try
+					{
+						ScanAndCollectNotes(project, false);
+						UpdateCurrentView(project);
+					}
+					catch (Exception e)
+					{
+						Logger.Log(e);
+					}
+				});
+
+			project.PathWatcher.Path = arg.Path;
+			project.PathWatcher.Changed += (sender, args) =>
+			{
+				/** TODO(incomplete) ask the user to refresh the project (or do it automatically, maybe a "dont ask again" button) */
+			};
+			project.PathWatcher.Deleted += (sender, args) =>
+			{
+				/** TODO(incomplete) notify the user, ask if they plan on keeping the project open (if so, dont allow updates, only refreshes (to the view that is)) set IsProjectFile to false */
+			};
+			project.PathWatcher.Renamed += (sender, args) =>
+			{
+				/** TODO(incomplete) same as Deleted probably */
+			};
+			project.PathWatcher.Error += (sender, args) =>
+			{
+				/** TODO(incomplete) same as Deleted but also log the error */
+			};
+
+			//var page = new TabPage(GetFolderName(arg.Path)) { Tag = project };
+			//page.Controls.Add(view);
+			view.Text = GetFolderName(arg.Path);
+			view.Tag = project;
+
+			return project;
+		}
+
+		private static ProjectSettings CreateProjectSettings(ParsedArg arg)
+		{
+			return arg.IsProjectFile ? JsonConvert.DeserializeObject<ProjectSettings>(File.ReadAllText(arg.Path)) :
+					CreateSettingsFromTemplate(new ProjectSettings { LastSearchPath = arg.Path });
 		}
 
 		private static ProjectSettings CreateSettingsFromTemplate(ProjectSettings copy)
@@ -369,6 +438,7 @@ namespace NotesOblitus
 		{
 			var view = new ProjectPage /** TODO(refactor) move view creation into a private function */
 			{
+				SearchPath = string.IsNullOrEmpty(settings.LastSearchPath) ? string.Empty : settings.LastSearchPath,
 				Dock = DockStyle.Fill
 			};
 
@@ -378,12 +448,12 @@ namespace NotesOblitus
 				if (!string.IsNullOrEmpty(settings.AutoScan) && bool.Parse(settings.AutoScan))
 					return;
 
-				ScanAndCollectNotes();
+				ScanAndCollectNotes(view.Tag as Project2);
 				if (view.Visible)
-					UpdateCurrentView(view.CurrentView);
+					UpdateCurrentView(view.Tag as Project2);
 			};
-			view.NoteClicked += (sender, eventArgs) => ShowViewMenu(eventArgs.Location, view);
-			view.NoteDoubleClicked += (sender, eventArgs) => OpenPreviewDialog();
+			view.NoteClicked += (sender, eventArgs) => ShowViewMenu(eventArgs.Location, view.Tag as Project2);
+			view.NoteDoubleClicked += (sender, eventArgs) => OpenPreviewDialog(view.Tag as Project2);
 
 			if (!string.IsNullOrEmpty(settings.LastSearchPath))
 				view.SearchPath = settings.LastSearchPath;
@@ -529,7 +599,7 @@ namespace NotesOblitus
 					new WebProxy
 					{
 						Address = new Uri(Settings.ProxyAddress + ':' + Settings.ProxyPort),
-						UseDefaultCredentials = !string.IsNullOrEmpty(Settings.UseDefaultCredentials) && Boolean.Parse(Settings.UseDefaultCredentials),
+						UseDefaultCredentials = !string.IsNullOrEmpty(Settings.UseDefaultCredentials) && bool.Parse(Settings.UseDefaultCredentials),
 						Credentials = new NetworkCredential(
 							!string.IsNullOrEmpty(Settings.ProxyUsername) ? Settings.ProxyUsername : "",
 							!string.IsNullOrEmpty(Settings.ProxyPassword) ? Settings.ProxyPassword : ""),
@@ -537,8 +607,87 @@ namespace NotesOblitus
 					}));
 		}
 
+		public void OpenExistingProject(TabControl projectControl)
+		{
+			var projectpath = ShowOpenDialog();
+			if (projectpath == null)
+				return;
+
+			var project = CreateAndAddProject(projectControl, new ParsedArg { Path = projectpath, IsProjectFile = true });
+			RunProjectScan(project);
+		}
+
+		public string ShowOpenDialog()
+		{
+			var dialog = new OpenFileDialog
+			{
+				CheckFileExists = true,
+				CheckPathExists = true,
+				InitialDirectory = ProjectDirectory,
+				Title = @"Open project",
+				Filter = @"Project files (*" + ProjectExtension + @")|*" + ProjectExtension
+			};
+
+			return dialog.ShowDialog(Owner) == DialogResult.OK ? dialog.FileName : null;
+		}
+
+		private void RunProjectScan(Project2 project)
+		{
+			var recentprojects = Settings.RecentProjects;
+			AddToRecents(Settings.LastProject, ref recentprojects, RecentItemsLimit);
+			Settings.RecentProjects = recentprojects;
+
+			//ResetAutoTimer();
+
+			if (!string.IsNullOrEmpty(project.Settings.AutoScan) && !bool.Parse(project.Settings.AutoScan))
+				ScanAndCollectNotes(project);
+		}
+
+		public void SaveProject(Project2 project)
+		{
+			if (project.IsProjectFile)
+				WriteSettings(project, project.PathWatcher.Path);
+			else
+				SaveProjectAs(project);
+		}
+
+		public void SaveProjectAs(Project2 project)
+		{
+			var projectpath = ShowSaveDialog();
+			if (projectpath == null)
+				return;
+
+			WriteSettings(project, projectpath);
+			project.PathWatcher.Path = projectpath;
+
+			var recentprojects = Settings.RecentProjects;
+			AddToRecents(projectpath, ref recentprojects, RecentItemsLimit);
+			Settings.RecentProjects = recentprojects;
+		}
+
+		private string ShowSaveDialog()
+		{
+			var dialog = new SaveFileDialog
+			{
+				FileName = '*' + ProjectExtension,
+				CheckPathExists = true,
+				OverwritePrompt = true,
+				InitialDirectory = ProjectDirectory,
+				Title = @"Save project",
+				Filter = @"Project files (*" + ProjectExtension + @")|*" + ProjectExtension,
+				AddExtension = true
+			};
+
+			return dialog.ShowDialog(Owner) == DialogResult.OK ? dialog.FileName : null;
+		}
+
+		private static void WriteSettings(object settings, string projectFilePath)
+		{
+			File.WriteAllText(projectFilePath, JsonConvert.SerializeObject(settings, Formatting.Indented));
+		}
+
 		/** TODO(specific) specific to each project */
-#if 0
+#if false
 		public string OpenProject()
 		{
 			var dialog = new OpenFileDialog
@@ -615,7 +764,6 @@ namespace NotesOblitus
 
 			return dialog.ShowDialog(Owner) == DialogResult.OK ? dialog.FileName : null;
 		}
-#endif
 
 		private void WriteProject(SaveMode saveMode)
 		{
@@ -645,26 +793,27 @@ namespace NotesOblitus
 					throw new Exception("Invalid SaveMode! [savemode=" + saveMode + ']');
 			}
 		}
+#endif
 
-		public string ChooseScanDirectory()
+		public string ChooseScanDirectory(Project2 project)
 		{
 			var dialog = new FolderBrowserDialog
 			{
-				SelectedPath = CurrentProject.LastSearchPath,
+				SelectedPath = project.Settings.LastSearchPath,
 				ShowNewFolderButton = true,
 				Description = @"Select a folder to scan from:"
 			};
-			if (CurrentProject.LastSearchPath.Trim().Length > 0)
-				if (Directory.Exists(CurrentProject.LastSearchPath))
-					dialog.SelectedPath = CurrentProject.LastSearchPath;
+			if (project.Settings.LastSearchPath.Trim().Length > 0)
+				if (Directory.Exists(project.Settings.LastSearchPath))
+					dialog.SelectedPath = project.Settings.LastSearchPath;
 
 			if (dialog.ShowDialog(Owner) != DialogResult.OK)
 				return null;
 
-			CurrentProject.LastSearchPath = dialog.SelectedPath;
-			return CurrentProject.LastSearchPath;
+			project.Settings.LastSearchPath = dialog.SelectedPath;
+			return project.Settings.LastSearchPath;
 		}
-
+#if false
 		public void SetAutoScan(bool autoScan)
 		{
 			AutoScan = autoScan;
@@ -686,12 +835,12 @@ namespace NotesOblitus
 			if (!_autoTimer.Enabled)
 				_autoTimer.Start();
 		}
-
-		public void ExportProject(string filePath, IObjectExporter exporter)
+#endif
+		public void ExportProject(Project2 project, string filePath, IObjectExporter exporter)
 		{
-			lock (_autoLock)
+			lock (project.AutoLock)
 			{
-				exporter.ExportObject(filePath, _notes);
+				exporter.ExportObject(filePath, project.Notes);
 			}
 		}
 
@@ -700,23 +849,23 @@ namespace NotesOblitus
 			projectsView.DropDownItems.Clear();
 			UpdateRecentItems(projectsView, recentProjects, (sender, args) =>
 			{
-				var view = (ToolStripMenuItem) sender;
-				RunProject(view.Tag as string);
+				var menuview = (ToolStripMenuItem)sender;
+				//RunProject(menuview.Tag as string); /** TODO(refactor) this should open a project file (if it still exists). if it's currently open, select that page */
 			});
 		}
 
-		public void UpdateRecentSearches(ToolStripMenuItem searchesView, string[] recentSearchPaths, TextBox initialPath)
+		public void UpdateRecentSearches(ToolStripMenuItem searchesView, string[] recentSearchPaths, ProjectPage searchPathPage)
 		{
 			searchesView.DropDownItems.Clear();
 			UpdateRecentItems(searchesView, recentSearchPaths, (sender, args) =>
 			{
-				var view = (ToolStripMenuItem)sender;
-				initialPath.Text = view.Tag as string;
-				ScanAndCollectNotes();
+				var menuview = (ToolStripMenuItem)sender;
+				searchPathPage.SearchPath = menuview.Tag as string;
+				//ScanAndCollectNotes(); /** TODO(refactor) this should also open a new project (if it still exists). if it's currently open, select that page */
 			});
 		}
 
-		private void UpdateRecentItems(ToolStripDropDownItem itemView, IEnumerable<string> recentItems, EventHandler handler)
+		private void UpdateRecentItems(ToolStripDropDownItem itemView, IEnumerable<string> recentItems, EventHandler clickHandler)
 		{
 			foreach (var item in recentItems)
 			{
@@ -725,7 +874,7 @@ namespace NotesOblitus
 					Size = new Size(195, 22),
 					Tag = item
 				};
-				newitem.Click += handler;
+				newitem.Click += clickHandler;
 				newitem.Text = GetShorterPath(item, newitem.Font, newitem.ContentRectangle.Width);
 
 				itemView.DropDownItems.Add(newitem);
@@ -767,34 +916,39 @@ namespace NotesOblitus
 
 		public void ExitApplication(bool save)
 		{
+			/*
 			AutoScan = false;
 			if (_autoTimer.Enabled)
 				_autoTimer.Stop();
+			 * */
+			if (_autoScheduler.IsRunning())
+				_autoScheduler.StopScheduler();
 
 			if (save)
-				WriteProject(SaveMode.DefaultOnly);
+				WriteSettings(Settings, AppSettingsFileName);
+				//WriteProject(SaveMode.DefaultOnly);
 
 			if (Application.OpenForms.OfType<NotesOblitusApp>().Any())
 				Owner.Close();
 		}
 
-		public void ShowStatistics()
+		public void ShowStatistics(Project2 project)
 		{
 			new StatisticsDialog
 			{
-				Statistics = _allStatisticsData
+				Statistics = project.AllStatisticsData
 			}.ShowDialog(Owner);
 		}
 
-		public List<FileInfo> GetScannableFilePaths(string startPathName)
+		public List<FileInfo> GetScannableFilePaths(Project2 project, string startPathName)
 		{
 			var searchfiles = new List<FileInfo>();
 			var currdepth = 1;
-			var searchdepth = Int32.Parse(CurrentProject.SearchDepth);
-			var paths = new List<SearchPath>(1) { new SearchPath { Path = CurrentProject.LastSearchPath, Depth = currdepth } };
-			var fileTypes = new List<string>(CurrentProject.FileTypes == null ? 1 : CurrentProject.FileTypes.Length);
-			if (CurrentProject.FileTypes != null)
-				fileTypes.AddRange(CurrentProject.FileTypes.Select(filetype => '.' + filetype));
+			var searchdepth = int.Parse(project.Settings.SearchDepth);
+			var paths = new List<SearchPath>(1) { new SearchPath { Path = project.Settings.LastSearchPath, Depth = currdepth } };
+			var fileTypes = new List<string>(project.Settings.FileTypes == null ? 1 : project.Settings.FileTypes.Length);
+			if (project.Settings.FileTypes != null)
+				fileTypes.AddRange(project.Settings.FileTypes.Select(filetype => '.' + filetype));
 
 			while (paths.Count > 0)
 			{
@@ -811,7 +965,7 @@ namespace NotesOblitus
 					continue;
 				}
 
-				if (IsDirectoryFiltered(currpath.Path))
+				if (IsDirectoryFiltered(project.Settings, currpath.Path))
 					continue;
 
 				var subdirs = Directory.GetDirectories(currpath.Path);
@@ -822,10 +976,10 @@ namespace NotesOblitus
 				{
 					DirectoryName = currpath.Path.Substring(currpath.Path.LastIndexOf(startPathName, StringComparison.Ordinal))
 				};
-				_allStatisticsData.DirectoryStatistics.Add(dirStatistic);
+				project.AllStatisticsData.DirectoryStatistics.Add(dirStatistic);
 
 				var fileEnumerable = (from filepath in Directory.GetFiles(currpath.Path)
-									  where !IsFileFiltered(filepath, fileTypes)
+									  where !IsFileFiltered(project.Settings, filepath, fileTypes)
 									  select 
 									  new FileInfo { FilePath = filepath, DirectoryData = dirStatistic });
 				var fileInfos = fileEnumerable as FileInfo[] ?? fileEnumerable.ToArray();
@@ -837,41 +991,41 @@ namespace NotesOblitus
 			return searchfiles;
 		}
 
-		private bool IsDirectoryFiltered(string path) /** TODO(performance) this could be sped up by passing a list of directories only and searching through that instead */
+		private static bool IsDirectoryFiltered(ProjectSettings settings, string path) /** TODO(performance) this could be sped up by passing a list of directories only and searching through that instead */
 		{
-			return CurrentProject.PathFilter != null && CurrentProject.PathFilter.Contains(path, new PathComparer());
+			return settings.PathFilter != null && settings.PathFilter.Contains(path, new PathComparer());
 		}
 
-		private bool IsPathFiltered(string path)
+		private static bool IsPathFiltered(ProjectSettings settings, string path)
 		{
-			return CurrentProject.PathFilter != null && CurrentProject.PathFilter.Contains(path, new PathComparer());
+			return settings.PathFilter != null && settings.PathFilter.Contains(path, new PathComparer());
 		}
 
-		private bool IsFileFiltered(string path, IEnumerable<string> fileTypes)
+		private static bool IsFileFiltered(ProjectSettings settings, string path, IEnumerable<string> fileTypes)
 		{
-			if (CurrentProject.FileTypes == null)
-				return IsPathFiltered(path);
-			return !fileTypes.Any(path.EndsWith) || IsPathFiltered(path);
+			if (settings.FileTypes == null)
+				return IsPathFiltered(settings, path);
+			return !fileTypes.Any(path.EndsWith) || IsPathFiltered(settings, path);
 		}
 
-		public void ScanAndCollectNotes(bool showProgress = true)
+		public void ScanAndCollectNotes(Project2 project, bool showProgress = true)
 		{
-			lock (_autoLock)
+			lock (project.AutoLock)
 			{
 				if (IsScanning)
 					return;
 				IsScanning = true;
 
-				_notes.Clear();
-				_tags.Clear();
-				_allStatisticsData.Clear();
+				project.Notes.Clear();
+				project.Tags.Clear();
+				project.AllStatisticsData.Clear();
 
-				if (string.IsNullOrEmpty(CurrentProject.LastSearchPath))
+				if (string.IsNullOrEmpty(project.Settings.LastSearchPath))
 					return;
 
-				var recentsearches = DefaultProject.RecentSearchPaths;
-				AddToRecents(CurrentProject.LastSearchPath, ref recentsearches, RecentItemsLimit);
-				DefaultProject.RecentSearchPaths = recentsearches;
+				var recentsearches = Settings.RecentSearchPaths;
+				AddToRecents(project.Settings.LastSearchPath, ref recentsearches, RecentItemsLimit);
+				Settings.RecentSearchPaths = recentsearches;
 
 				ProgressWindow progresswindow = null;
 				if (showProgress)
@@ -887,22 +1041,22 @@ namespace NotesOblitus
 				}
 
 				var timer = Stopwatch.StartNew();
-				var startpathname = GetFolderName(CurrentProject.LastSearchPath);
-				var files = GetScannableFilePaths(startpathname);
+				var startpathname = GetFolderName(project.Settings.LastSearchPath);
+				var files = GetScannableFilePaths(project, startpathname);
 				if (showProgress)
 					progresswindow.StartProgress(files.Count);
-				
-				var regex = new Regex("(^\\s*$)|(" + Regex.Escape(CurrentProject.NoteOpen) + "((.|\n)*?)" + Regex.Escape(CurrentProject.NoteClose) + ')',
+
+				var regex = new Regex("(^\\s*$)|(" + Regex.Escape(project.Settings.NoteOpen) + "((.|\n)*?)" + Regex.Escape(project.Settings.NoteClose) + ')',
 									RegexOptions.Multiline); // finds empty lines as well as notes
 
-				CollectNotesAndStats(progresswindow, files, regex, startpathname);
+				CollectNotesAndStats(project, progresswindow, files, regex, startpathname);
 				timer.Stop();
 				if (showProgress)
 				{
 					progresswindow.IncrementProgress();
 					progresswindow.Close();
 				}
-				_allStatisticsData.TimeElapsed = (timer.ElapsedMilliseconds / 1000.0f);
+				project.AllStatisticsData.TimeElapsed = (timer.ElapsedMilliseconds / 1000.0f);
 
 				IsScanning = false;
 			}
@@ -920,7 +1074,7 @@ namespace NotesOblitus
 			return index >= 0 && index + 1 < path.Length ? path.Substring(index + 1) : path;
 		}
 
-		private void CollectNotesAndStats(ProgressWindow progressWindow, IEnumerable<FileInfo> filePaths, Regex searchRegex, string startPathName)
+		private void CollectNotesAndStats(Project2 project, ProgressWindow progressWindow, IEnumerable<FileInfo> filePaths, Regex searchRegex, string startPathName)
 		{
 			try
 			{
@@ -939,11 +1093,11 @@ namespace NotesOblitus
 						LineCount = 0,
 						NoteCount = 0
 					};
-					_allStatisticsData.FileStatistics.Add(currstat); // add a new statistic
+					project.AllStatisticsData.FileStatistics.Add(currstat); // add a new statistic
 
 					var text = File.ReadAllText(filepath);
 					currstat.CharCount = text.Length;
-					ReadMatches(text, searchRegex, filepath, filename, currstat);
+					ReadMatches(project, text, searchRegex, filepath, filename, currstat);
 
 					fileinfo.DirectoryData.LineCount += currstat.LineCount; // update directory statistics based on file data
 					fileinfo.DirectoryData.NoteCount += currstat.NoteCount;
@@ -956,7 +1110,7 @@ namespace NotesOblitus
 			}
 		}
 
-		private void ReadMatches(string text, Regex searchRegex, string filePath, string fileName, FileStatistic currStatistic)
+		private void ReadMatches(Project2 project, string text, Regex searchRegex, string filePath, string fileName, FileStatistic currStatistic)
 		{
 			var lastindex = 0;
 			var currline = 1;
@@ -970,8 +1124,8 @@ namespace NotesOblitus
 				}
 
 				var trimmed = match.Value.Trim();
-				var len = CurrentProject.NoteOpen.Length;
-				trimmed = trimmed.Substring(len, trimmed.LastIndexOf(CurrentProject.NoteClose, StringComparison.Ordinal) - len).Trim();
+				var len = project.Settings.NoteOpen.Length;
+				trimmed = trimmed.Substring(len, trimmed.LastIndexOf(project.Settings.NoteClose, StringComparison.Ordinal) - len).Trim();
 				currline += IndexToLine(text, match.Index, lastindex);
 				lastindex = match.Index;
 
@@ -994,23 +1148,23 @@ namespace NotesOblitus
 							All = match.Value.Trim()
 						};
 
-						_tags.Add(tag);
-						if (!_allStatisticsData.TagStatistics.ContainsKey(tag)) // update the tag count statistics
-							_allStatisticsData.TagStatistics.Add(tag, new TagStatistic { TagName = tag, TagCount = 1 });
+						project.Tags.Add(tag);
+						if (!project.AllStatisticsData.TagStatistics.ContainsKey(tag)) // update the tag count statistics
+							project.AllStatisticsData.TagStatistics.Add(tag, new TagStatistic { TagName = tag, TagCount = 1 });
 						else
-							++_allStatisticsData.TagStatistics[tag].TagCount;
+							++project.AllStatisticsData.TagStatistics[tag].TagCount;
 
-						_notes.Add(note);
+						project.Notes.Add(note);
 					}
 				}
 				else
 				{
-					if (!_allStatisticsData.TagStatistics.ContainsKey("none")) // update the no tag count statistics
-						_allStatisticsData.TagStatistics.Add("none", new TagStatistic { TagName = "none", TagCount = 1 });
+					if (!project.AllStatisticsData.TagStatistics.ContainsKey("none")) // update the no tag count statistics
+						project.AllStatisticsData.TagStatistics.Add("none", new TagStatistic { TagName = "none", TagCount = 1 });
 					else
-						++_allStatisticsData.TagStatistics["none"].TagCount;
+						++project.AllStatisticsData.TagStatistics["none"].TagCount;
 
-					_notes.Add(new Note
+					project.Notes.Add(new Note
 					{
 						FilePath = filePath,
 						FileName = fileName,
@@ -1024,7 +1178,7 @@ namespace NotesOblitus
 			}
 
 			currStatistic.LineCount = currline + IndexToLine(text, text.Length, lastindex); // update line count for statistics
-			_allStatisticsData.TotalNoteCount += currStatistic.NoteCount;
+			project.AllStatisticsData.TotalNoteCount += currStatistic.NoteCount;
 		}
 
 		private static int IndexToLine(string text, int index, int lastIndex)
@@ -1059,21 +1213,21 @@ namespace NotesOblitus
 			recentItems = recentlist.GetRange(0, Math.Min(recentlist.Count, itemLimit)).ToArray();
 		}
 
-		public void UpdateCurrentView(Control currentViewControl)
+		public void UpdateCurrentView(Project2 project)
 		{
 			if (Owner.IsDisposed || IsUpdatingView)
 				return;
 			IsUpdatingView = true;
 
-			var filterTags = Boolean.Parse(CurrentProject.FilterTags);
-			if (CurrentProject.TagFilter == null)
+			var filterTags = bool.Parse(project.Settings.FilterTags);
+			if (project.Settings.TagFilter == null)
 				filterTags = false;
 
-			lock (_autoLock)
+			lock (project.AutoLock)
 			{
-				if (CurrentViewMode == ViewMode.ListView)
+				if (project.Page.CurrentMode == ViewMode.ListView)
 				{
-					var listView = currentViewControl as DataGridView;
+					var listView = project.Page.CurrentView as DataGridView;
 #if DEBUG
 					Debug.Assert(listView != null);
 #else
@@ -1087,24 +1241,24 @@ namespace NotesOblitus
 
 					if (filterTags)
 					{
-						foreach (var note in _notes.Where(note => !CurrentProject.TagFilter.Contains(note.Tag)))
+						foreach (var note in project.Notes.Where(note => !project.Settings.TagFilter.Contains(note.Tag)))
 							AddToList(listView, note);
 					}
 					else
 					{
-						foreach (var note in _notes)
+						foreach (var note in project.Notes)
 							AddToList(listView, note);
 					}
 
 					// try and select the first note, unless a note is already selected
-					if (SelectedNote == null)
-						SelectedNote = listView.CurrentCell == null
+					if (project.Page.CurrentNote == null)
+						project.Page.CurrentNote = listView.CurrentCell == null
 							? (listView.Rows.Count > 0 ? (Note)listView.Rows[0].Tag : null)
 							: (Note)listView.CurrentCell.OwningRow.Tag;
 				}
 				else
 				{
-					var treeView = currentViewControl as TreeView;
+					var treeView = project.Page.CurrentView as TreeView;
 #if DEBUG
 					Debug.Assert(treeView != null);
 #else
@@ -1114,36 +1268,36 @@ namespace NotesOblitus
 						return;
 					}
 #endif
-					var startindex = CurrentProject.LastSearchPath.Length + 1; // + 1 to skip the last backslash
+					var startindex = project.Settings.LastSearchPath.Length + 1; // + 1 to skip the last backslash
 					treeView.Nodes.Clear();
-					treeView.Nodes.Add(GetFolderName(CurrentProject.LastSearchPath));
+					treeView.Nodes.Add(GetFolderName(project.Settings.LastSearchPath));
 					var curr = treeView.Nodes[0];
-					curr.ToolTipText = @"Found: " + _notes.Count;
+					curr.ToolTipText = @"Found: " + project.Notes.Count;
 
 					if (filterTags)
 					{
-						foreach (var note in _notes.Where(note => !CurrentProject.TagFilter.Contains(note.Tag)))
+						foreach (var note in project.Notes.Where(note => !project.Settings.TagFilter.Contains(note.Tag)))
 							AddToTree(note, curr, startindex);
 					}
 					else
 					{
-						foreach (var note in _notes)
+						foreach (var note in project.Notes)
 							AddToTree(note, curr, startindex);
 					}
 
 					treeView.ExpandAll();
 
 					// try and select the first note, unless a note is already selected
-					if (SelectedNote == null)
+					if (project.Page.CurrentNote == null)
 					{
 						if (treeView.SelectedNode != null)
-							SelectedNote = (Note)treeView.SelectedNode.Tag;
+							project.Page.CurrentNote = (Note)treeView.SelectedNode.Tag;
 						else if (treeView.Nodes[0].Nodes.Count > 0)
 						{
 							var currnode = treeView.Nodes[0].Nodes[0];
 							while (currnode.Nodes.Count > 0)
 								currnode = currnode.Nodes[0];
-							SelectedNote = (Note)currnode.Tag;
+							project.Page.CurrentNote = (Note)currnode.Tag;
 						}
 					}
 				}
@@ -1187,41 +1341,41 @@ namespace NotesOblitus
 			currNode.ToolTipText = "Found: " + currNode.Nodes.Count;
 		}
 
-		public void OpenPreviewDialog()
+		public void OpenPreviewDialog(Project2 project)
 		{
-			if (CurrentProject2.Control.CurrentNote == null)
+			if (project.Page.CurrentNote == null)
 				return;
 
 			var dialog = new PreviewDialog
 			{
-				LineCount = Int32.Parse(CurrentProject2.Settings.PreviewLineCount),
-				NotePreview = CurrentProject2.Control.CurrentNote
+				LineCount = int.Parse(project.Settings.PreviewLineCount),
+				NotePreview = project.Page.CurrentNote
 			};
-			dialog.OpenClicked += (sender, args) => RunEditor();
-			dialog.RemoveClicked += (sender, args) => RemoveNoteFromSource(CurrentProject2);
+			dialog.OpenClicked += (sender, args) => RunEditor(project);
+			dialog.RemoveClicked += (sender, args) => RemoveNoteFromSource(project);
 
 			dialog.ShowDialog(Owner);
 		}
 
-		public void RunEditor()
+		public void RunEditor(Project2 project)
 		{
-			if (SelectedNote == null)
+			if (project.Page.CurrentNote == null)
 				return;
 
-			if (string.IsNullOrEmpty(CurrentProject.Editor))
+			if (string.IsNullOrEmpty(project.Settings.Editor))
 			{
 				MessageBox.Show(Owner, @"Please select an editor in the options window.", @"Edit Externally", MessageBoxButtons.OK,
 					MessageBoxIcon.Information);
 				return;
 			}
 
-			var args = CurrentProject.EditorArgs; /** TODO(performance) could make 1 pass through the args instead of each one individually */
-			args = args.Replace("%l", "" + SelectedNote.Line);
-			args = args.Replace("%f", SelectedNote.FileName);
-			args = args.Replace("%p", SelectedNote.FilePath);
-			args = args.Replace("%t", SelectedNote.Tag);
-			args = args.Replace("%m", SelectedNote.Message);
-			var process = new ProcessStartInfo(CurrentProject.Editor, args)
+			var args = project.Settings.EditorArgs; /** TODO(performance) could make 1 pass through the args instead of each one individually */
+			args = args.Replace("%l", "" + project.Page.CurrentNote.Line);
+			args = args.Replace("%f", project.Page.CurrentNote.FileName);
+			args = args.Replace("%p", project.Page.CurrentNote.FilePath);
+			args = args.Replace("%t", project.Page.CurrentNote.Tag);
+			args = args.Replace("%m", project.Page.CurrentNote.Message);
+			var process = new ProcessStartInfo(project.Settings.Editor, args)
 			{
 				UseShellExecute = true
 			};
@@ -1230,7 +1384,7 @@ namespace NotesOblitus
 
 		public void RemoveNoteFromSource(Project2 project)
 		{
-			var page = project.Control;
+			var page = project.Page;
 			if (page.CurrentNote == null)
 				return;
 
@@ -1249,7 +1403,7 @@ namespace NotesOblitus
 			if (result != DialogResult.Yes)
 				return;
 
-			if (Boolean.Parse(project.Settings.DeleteFromSource) && File.Exists(page.CurrentNote.FilePath))
+			if (bool.Parse(project.Settings.DeleteFromSource) && File.Exists(page.CurrentNote.FilePath))
 			{
 				var filetext = File.ReadAllText(page.CurrentNote.FilePath);
 				filetext = filetext.Replace(page.CurrentNote.All, ""); // the file may have changed before delete, so instead of removing by index, replace
@@ -1257,18 +1411,18 @@ namespace NotesOblitus
 			}
 
 
-			lock (_autoLock)
+			lock (project.AutoLock)
 			{
 				if (page.CurrentMode == ViewMode.ListView)
 				{
 					var listView = (DataGridView)page.CurrentView;
-					_notes.RemoveAt(listView.CurrentCell.RowIndex);
+					project.Notes.RemoveAt(listView.CurrentCell.RowIndex);
 					listView.Rows.RemoveAt(listView.CurrentCell.RowIndex);
 				}
 				else
 				{
 					var treeView = (TreeView)page.CurrentView;
-					_notes.Remove(page.CurrentNote);
+					project.Notes.Remove(page.CurrentNote);
 					if (treeView.SelectedNode.Parent != null)
 						treeView.SelectedNode.Parent.Nodes.Remove(treeView.SelectedNode);
 					else
@@ -1278,10 +1432,10 @@ namespace NotesOblitus
 			page.CurrentNote = null;
 		}
 
-		public void DisplayOptionsWindow()
+		public void DisplayOptionsWindow(Project2 project)
 		{
 			var optionswindow = new OptionsWindow();
-			optionswindow.InitialiseSettings(DefaultProject, CurrentProject, _tags.ToList(), _updateAvailable);
+			optionswindow.InitialiseSettings(CreateDefaultSettings(), project.Settings, project.Tags.ToList(), _updateAvailable);
 			optionswindow.ReplaceClicked += (sender, args) =>
 			{
 				var dialog = new ReplaceNotesDialog();
@@ -1308,15 +1462,19 @@ namespace NotesOblitus
 					return;
 				}
 
-				ReplaceOldNotes(oldStart, oldEnd, newStart, newEnd);
+				ReplaceOldNotes(project.Notes, oldStart, oldEnd, newStart, newEnd);
 			};
-			optionswindow.UpdateClicked += (sender, args) =>
+#if false
+			optionswindow.UpdateClicked += (sender, args) => /** TODO((refactor) this will go where the App Settings Window being opened will go */
 			{
 				CheckForUpdates(true, true, true);
 				args.UpdateFound = _updateAvailable;
 			};
+#endif
 			optionswindow.Closed += (sender, args) =>
 			{
+				project.Settings = optionswindow.RetrieveSettings();
+#if false
 				var lastproject = "";
 				if (CurrentProject == DefaultProject)
 					lastproject = DefaultProject.LastProject;
@@ -1328,17 +1486,18 @@ namespace NotesOblitus
 				if (CurrentProject == DefaultProject)
 					DefaultProject.LastProject = lastproject;
 				ResetAutoTimer();
+#endif
 			};
 			optionswindow.Show(Owner);
 		}
 
-		private void ReplaceOldNotes(string oldStart, string oldEnd, string newStart, string newEnd)
+		private static void ReplaceOldNotes(IEnumerable<Note> notes, string oldStart, string oldEnd, string newStart, string newEnd)
 		{
 			/** TODO(incomplete) this replaces a specific style with another. should it just replace each currently found note style with the new one instead? */
 			/** TODO(incomplete) this should also create a backup of the file before replacing, and if something goes wrong, revert to the backup */
 			// collect all files used and the line numbers that their notes appear on, and the line numbers that their notes end on
 			var files = new Dictionary<string, List<int>>();
-			foreach (var note in _notes)
+			foreach (var note in notes)
 			{
 				var linenumber = note.Line - 1;
 				var linecount = note.All.Count(c => c == '\n');
@@ -1385,16 +1544,16 @@ namespace NotesOblitus
 			dialog.ShowDialog(Owner);
 		}
 
-		private void ShowViewMenu(Point location, ProjectPage currentPage)
+		private void ShowViewMenu(Point location, Project2 project)
 		{
 			var menu = new ContextMenuStrip();
 			var previewItem = new ToolStripMenuItem("Preview");
 			var editItem = new ToolStripMenuItem("Edit");
 			var deleteItem = new ToolStripMenuItem("Delete");
 
-			previewItem.Click += (sender, args) => OpenPreviewDialog();
-			editItem.Click += (sender, args) => RunEditor();
-			deleteItem.Click += (sender, args) => RemoveNoteFromSource(CurrentProject2);
+			previewItem.Click += (sender, args) => OpenPreviewDialog(project);
+			editItem.Click += (sender, args) => RunEditor(project);
+			deleteItem.Click += (sender, args) => RemoveNoteFromSource(project);
 
 			menu.Items.Add(previewItem);
 			menu.Items.Add(editItem);

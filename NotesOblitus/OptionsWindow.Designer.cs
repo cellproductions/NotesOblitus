@@ -31,15 +31,12 @@
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(OptionsWindow));
 			this.tabControl1 = new System.Windows.Forms.TabControl();
 			this.tpGeneral = new System.Windows.Forms.TabPage();
-			this.bGeneralCheckUpdate = new System.Windows.Forms.Button();
 			this.lGeneralSeconds = new System.Windows.Forms.Label();
 			this.bGeneralReplace = new System.Windows.Forms.Button();
 			this.lGeneralEnd = new System.Windows.Forms.Label();
 			this.lGeneralStart = new System.Windows.Forms.Label();
 			this.tbGeneralEnd = new System.Windows.Forms.TextBox();
 			this.tbGeneralStart = new System.Windows.Forms.TextBox();
-			this.cbGeneralUpdate = new System.Windows.Forms.ComboBox();
-			this.bGeneralUpdate = new System.Windows.Forms.Button();
 			this.lGeneralDelete = new System.Windows.Forms.Label();
 			this.cGeneralDelete = new System.Windows.Forms.CheckBox();
 			this.lGeneralDepth = new System.Windows.Forms.Label();
@@ -47,7 +44,7 @@
 			this.lGeneralInterval = new System.Windows.Forms.Label();
 			this.nGeneralInterval = new System.Windows.Forms.NumericUpDown();
 			this.tpPreview = new System.Windows.Forms.TabPage();
-			this.tbPreviewEditor = new NotesOblitus.Controls.TextBoxPlaceHolder();
+			this.tbPreviewEditor = new CellSharpControls.TextBoxPlaceHolder();
 			this.nPreviewLineCount = new System.Windows.Forms.NumericUpDown();
 			this.lPreviewLineCount = new System.Windows.Forms.Label();
 			this.lPreviewMacros = new System.Windows.Forms.Label();
@@ -67,16 +64,6 @@
 			this.cbFiltersTypes = new System.Windows.Forms.ComboBox();
 			this.bFiltersRemoveType = new System.Windows.Forms.Button();
 			this.bFiltersAddType = new System.Windows.Forms.Button();
-			this.tpProxy = new System.Windows.Forms.TabPage();
-			this.cProxyUseProxy = new System.Windows.Forms.CheckBox();
-			this.cProxyDefaultProxy = new System.Windows.Forms.CheckBox();
-			this.cProxyShowPwd = new System.Windows.Forms.CheckBox();
-			this.cProxyDefaultCreds = new System.Windows.Forms.CheckBox();
-			this.tbProxyPassword = new NotesOblitus.Controls.TextBoxPlaceHolder();
-			this.tbProxyUsername = new NotesOblitus.Controls.TextBoxPlaceHolder();
-			this.tbProxyPort = new NotesOblitus.Controls.TextBoxPlaceHolder();
-			this.tbProxyAddress = new NotesOblitus.Controls.TextBoxPlaceHolder();
-			this.label1 = new System.Windows.Forms.Label();
 			this.tabControl1.SuspendLayout();
 			this.tpGeneral.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.nGeneralDepth)).BeginInit();
@@ -84,7 +71,6 @@
 			this.tpPreview.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.nPreviewLineCount)).BeginInit();
 			this.tpFilters.SuspendLayout();
-			this.tpProxy.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// tabControl1
@@ -92,7 +78,6 @@
 			this.tabControl1.Controls.Add(this.tpGeneral);
 			this.tabControl1.Controls.Add(this.tpPreview);
 			this.tabControl1.Controls.Add(this.tpFilters);
-			this.tabControl1.Controls.Add(this.tpProxy);
 			this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.tabControl1.Location = new System.Drawing.Point(0, 0);
 			this.tabControl1.Name = "tabControl1";
@@ -102,15 +87,12 @@
 			// 
 			// tpGeneral
 			// 
-			this.tpGeneral.Controls.Add(this.bGeneralCheckUpdate);
 			this.tpGeneral.Controls.Add(this.lGeneralSeconds);
 			this.tpGeneral.Controls.Add(this.bGeneralReplace);
 			this.tpGeneral.Controls.Add(this.lGeneralEnd);
 			this.tpGeneral.Controls.Add(this.lGeneralStart);
 			this.tpGeneral.Controls.Add(this.tbGeneralEnd);
 			this.tpGeneral.Controls.Add(this.tbGeneralStart);
-			this.tpGeneral.Controls.Add(this.cbGeneralUpdate);
-			this.tpGeneral.Controls.Add(this.bGeneralUpdate);
 			this.tpGeneral.Controls.Add(this.lGeneralDelete);
 			this.tpGeneral.Controls.Add(this.cGeneralDelete);
 			this.tpGeneral.Controls.Add(this.lGeneralDepth);
@@ -124,17 +106,6 @@
 			this.tpGeneral.TabIndex = 0;
 			this.tpGeneral.Text = "General";
 			this.tpGeneral.UseVisualStyleBackColor = true;
-			// 
-			// bGeneralCheckUpdate
-			// 
-			this.bGeneralCheckUpdate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.bGeneralCheckUpdate.Location = new System.Drawing.Point(6, 207);
-			this.bGeneralCheckUpdate.Name = "bGeneralCheckUpdate";
-			this.bGeneralCheckUpdate.Size = new System.Drawing.Size(129, 23);
-			this.bGeneralCheckUpdate.TabIndex = 28;
-			this.bGeneralCheckUpdate.Text = "Check for updates";
-			this.bGeneralCheckUpdate.UseVisualStyleBackColor = true;
-			this.bGeneralCheckUpdate.Click += new System.EventHandler(this.bGeneralCheckUpdate_Click);
 			// 
 			// lGeneralSeconds
 			// 
@@ -192,34 +163,6 @@
 			this.tbGeneralStart.Name = "tbGeneralStart";
 			this.tbGeneralStart.Size = new System.Drawing.Size(181, 20);
 			this.tbGeneralStart.TabIndex = 22;
-			// 
-			// cbGeneralUpdate
-			// 
-			this.cbGeneralUpdate.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.cbGeneralUpdate.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-			this.cbGeneralUpdate.FormattingEnabled = true;
-			this.cbGeneralUpdate.Items.AddRange(new object[] {
-            "Automatically update",
-            "Notify me of an update",
-            "Do not check for updates"});
-			this.cbGeneralUpdate.Location = new System.Drawing.Point(6, 180);
-			this.cbGeneralUpdate.Name = "cbGeneralUpdate";
-			this.cbGeneralUpdate.Size = new System.Drawing.Size(264, 21);
-			this.cbGeneralUpdate.TabIndex = 21;
-			// 
-			// bGeneralUpdate
-			// 
-			this.bGeneralUpdate.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.bGeneralUpdate.CausesValidation = false;
-			this.bGeneralUpdate.ForeColor = System.Drawing.Color.Firebrick;
-			this.bGeneralUpdate.Location = new System.Drawing.Point(141, 207);
-			this.bGeneralUpdate.Name = "bGeneralUpdate";
-			this.bGeneralUpdate.Size = new System.Drawing.Size(129, 23);
-			this.bGeneralUpdate.TabIndex = 20;
-			this.bGeneralUpdate.Text = "No update available";
-			this.bGeneralUpdate.UseVisualStyleBackColor = true;
 			// 
 			// lGeneralDelete
 			// 
@@ -570,123 +513,6 @@
 			this.bFiltersAddType.UseVisualStyleBackColor = true;
 			this.bFiltersAddType.Click += new System.EventHandler(this.bFiltersAddType_Click);
 			// 
-			// tpProxy
-			// 
-			this.tpProxy.Controls.Add(this.cProxyUseProxy);
-			this.tpProxy.Controls.Add(this.cProxyDefaultProxy);
-			this.tpProxy.Controls.Add(this.cProxyShowPwd);
-			this.tpProxy.Controls.Add(this.cProxyDefaultCreds);
-			this.tpProxy.Controls.Add(this.tbProxyPassword);
-			this.tpProxy.Controls.Add(this.tbProxyUsername);
-			this.tpProxy.Controls.Add(this.tbProxyPort);
-			this.tpProxy.Controls.Add(this.tbProxyAddress);
-			this.tpProxy.Controls.Add(this.label1);
-			this.tpProxy.Location = new System.Drawing.Point(4, 22);
-			this.tpProxy.Name = "tpProxy";
-			this.tpProxy.Padding = new System.Windows.Forms.Padding(3);
-			this.tpProxy.Size = new System.Drawing.Size(276, 236);
-			this.tpProxy.TabIndex = 3;
-			this.tpProxy.Text = "Proxy";
-			this.tpProxy.UseVisualStyleBackColor = true;
-			// 
-			// cProxyUseProxy
-			// 
-			this.cProxyUseProxy.AutoSize = true;
-			this.cProxyUseProxy.Location = new System.Drawing.Point(6, 7);
-			this.cProxyUseProxy.Name = "cProxyUseProxy";
-			this.cProxyUseProxy.Size = new System.Drawing.Size(73, 17);
-			this.cProxyUseProxy.TabIndex = 8;
-			this.cProxyUseProxy.Text = "Use proxy";
-			this.cProxyUseProxy.UseVisualStyleBackColor = true;
-			this.cProxyUseProxy.CheckedChanged += new System.EventHandler(this.cProxyUseProxy_CheckedChanged);
-			// 
-			// cProxyDefaultProxy
-			// 
-			this.cProxyDefaultProxy.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.cProxyDefaultProxy.AutoSize = true;
-			this.cProxyDefaultProxy.Checked = true;
-			this.cProxyDefaultProxy.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.cProxyDefaultProxy.Location = new System.Drawing.Point(159, 6);
-			this.cProxyDefaultProxy.Name = "cProxyDefaultProxy";
-			this.cProxyDefaultProxy.Size = new System.Drawing.Size(108, 17);
-			this.cProxyDefaultProxy.TabIndex = 7;
-			this.cProxyDefaultProxy.Text = "Use default proxy";
-			this.cProxyDefaultProxy.UseVisualStyleBackColor = true;
-			this.cProxyDefaultProxy.CheckedChanged += new System.EventHandler(this.cProxyDefaultProxy_CheckedChanged);
-			this.cProxyDefaultProxy.EnabledChanged += new System.EventHandler(this.cProxyDefaultProxy_EnabledChanged);
-			// 
-			// cProxyShowPwd
-			// 
-			this.cProxyShowPwd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.cProxyShowPwd.AutoSize = true;
-			this.cProxyShowPwd.Location = new System.Drawing.Point(168, 82);
-			this.cProxyShowPwd.Name = "cProxyShowPwd";
-			this.cProxyShowPwd.Size = new System.Drawing.Size(101, 17);
-			this.cProxyShowPwd.TabIndex = 6;
-			this.cProxyShowPwd.Text = "Show password";
-			this.cProxyShowPwd.UseVisualStyleBackColor = true;
-			this.cProxyShowPwd.CheckedChanged += new System.EventHandler(this.cProxyShowPwd_CheckedChanged);
-			// 
-			// cProxyDefaultCreds
-			// 
-			this.cProxyDefaultCreds.AutoSize = true;
-			this.cProxyDefaultCreds.Location = new System.Drawing.Point(6, 82);
-			this.cProxyDefaultCreds.Name = "cProxyDefaultCreds";
-			this.cProxyDefaultCreds.Size = new System.Drawing.Size(134, 17);
-			this.cProxyDefaultCreds.TabIndex = 5;
-			this.cProxyDefaultCreds.Text = "Use default credentials";
-			this.cProxyDefaultCreds.UseVisualStyleBackColor = true;
-			this.cProxyDefaultCreds.CheckedChanged += new System.EventHandler(this.cProxyDefaultCreds_CheckedChanged);
-			this.cProxyDefaultCreds.EnabledChanged += new System.EventHandler(this.cProxyDefaultCreds_EnabledChanged);
-			// 
-			// tbProxyPassword
-			// 
-			this.tbProxyPassword.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.tbProxyPassword.Location = new System.Drawing.Point(6, 131);
-			this.tbProxyPassword.Name = "tbProxyPassword";
-			this.tbProxyPassword.PlaceHolder = "Password";
-			this.tbProxyPassword.Size = new System.Drawing.Size(263, 20);
-			this.tbProxyPassword.TabIndex = 4;
-			// 
-			// tbProxyUsername
-			// 
-			this.tbProxyUsername.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.tbProxyUsername.Location = new System.Drawing.Point(6, 105);
-			this.tbProxyUsername.Name = "tbProxyUsername";
-			this.tbProxyUsername.PlaceHolder = "User name";
-			this.tbProxyUsername.Size = new System.Drawing.Size(263, 20);
-			this.tbProxyUsername.TabIndex = 3;
-			// 
-			// tbProxyPort
-			// 
-			this.tbProxyPort.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.tbProxyPort.Location = new System.Drawing.Point(6, 56);
-			this.tbProxyPort.Name = "tbProxyPort";
-			this.tbProxyPort.PlaceHolder = "Proxy port";
-			this.tbProxyPort.Size = new System.Drawing.Size(263, 20);
-			this.tbProxyPort.TabIndex = 2;
-			// 
-			// tbProxyAddress
-			// 
-			this.tbProxyAddress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.tbProxyAddress.Location = new System.Drawing.Point(6, 30);
-			this.tbProxyAddress.Name = "tbProxyAddress";
-			this.tbProxyAddress.PlaceHolder = "Proxy address";
-			this.tbProxyAddress.Size = new System.Drawing.Size(263, 20);
-			this.tbProxyAddress.TabIndex = 1;
-			// 
-			// label1
-			// 
-			this.label1.AutoSize = true;
-			this.label1.Location = new System.Drawing.Point(3, 3);
-			this.label1.Name = "label1";
-			this.label1.Size = new System.Drawing.Size(0, 13);
-			this.label1.TabIndex = 0;
-			// 
 			// OptionsWindow
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -708,8 +534,6 @@
 			((System.ComponentModel.ISupportInitialize)(this.nPreviewLineCount)).EndInit();
 			this.tpFilters.ResumeLayout(false);
 			this.tpFilters.PerformLayout();
-			this.tpProxy.ResumeLayout(false);
-			this.tpProxy.PerformLayout();
 			this.ResumeLayout(false);
 
 		}
@@ -723,8 +547,6 @@
 		private System.Windows.Forms.Label lGeneralStart;
 		public System.Windows.Forms.TextBox tbGeneralEnd;
 		public System.Windows.Forms.TextBox tbGeneralStart;
-		public System.Windows.Forms.ComboBox cbGeneralUpdate;
-		public System.Windows.Forms.Button bGeneralUpdate;
 		private System.Windows.Forms.Label lGeneralDelete;
 		public System.Windows.Forms.CheckBox cGeneralDelete;
 		private System.Windows.Forms.Label lGeneralDepth;
@@ -751,18 +573,7 @@
 		private System.Windows.Forms.Button bFiltersRemoveType;
 		private System.Windows.Forms.Button bFiltersAddType;
 		private System.Windows.Forms.Label lGeneralSeconds;
-		private Controls.TextBoxPlaceHolder tbPreviewEditor;
-		private System.Windows.Forms.Button bGeneralCheckUpdate;
+		private CellSharpControls.TextBoxPlaceHolder tbPreviewEditor;
 		private System.Windows.Forms.Button bFiltersInvert;
-		private System.Windows.Forms.TabPage tpProxy;
-		private Controls.TextBoxPlaceHolder tbProxyAddress;
-		private System.Windows.Forms.Label label1;
-		private Controls.TextBoxPlaceHolder tbProxyPassword;
-		private Controls.TextBoxPlaceHolder tbProxyUsername;
-		private Controls.TextBoxPlaceHolder tbProxyPort;
-		private System.Windows.Forms.CheckBox cProxyDefaultProxy;
-		private System.Windows.Forms.CheckBox cProxyShowPwd;
-		private System.Windows.Forms.CheckBox cProxyDefaultCreds;
-		private System.Windows.Forms.CheckBox cProxyUseProxy;
 	}
 }

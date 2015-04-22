@@ -11,7 +11,7 @@ namespace NotesOblitus
 #if DEBUG
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
-			Application.Run(new NotesOblitusApp(args.Length > 0 ? args[0] : ""));
+			Application.Run(new NotesOblitusApp(args));
 #else
 			try
 			{

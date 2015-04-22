@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using CellSharpControls;
 using Global;
 using NotesOblitus.Controls;
 using NotesOblitus.Exporters;
@@ -20,13 +21,14 @@ namespace NotesOblitus
 			//var lastsearchpath = _manager.LoadAndSetupOptions();
 			//tbInitialPath.Text = lastsearchpath;
 		}
-#if 0
+
 		public void UpdateView()
 		{
 			if (Visible)
-				_manager.UpdateCurrentView(_manager.CurrentViewMode == ViewMode.ListView ? (Control)dgListNotes : tvListNotes);
+				_manager.UpdateCurrentView(tcProjects.SelectedTab.Tag as Project2);
+			//_manager.UpdateCurrentView(_manager.CurrentViewMode == ViewMode.ListView ? (Control)dgListNotes : tvListNotes);
 		}
-#endif
+
 		private void NotesOblitusApp_VisibleChanged(object sender, EventArgs e)
 		{
 			UpdateView();
@@ -34,45 +36,44 @@ namespace NotesOblitus
 
 		private void NotesOblitusApp_FormClosed(object sender, FormClosedEventArgs e)
 		{
-			_manager.ExitApplication(true);
 			niMainNotify.Dispose();
+			_manager.ExitApplication(true);
 		}
 
 		private void NotesOblitusApp_Shown(object sender, EventArgs e)
 		{
 			_manager.CheckForUpdates(false, false, false);
-			_manager.ScanAndCollectNotes();
+			_manager.ScanAndCollectNotes(tcProjects.SelectedTab.Tag as Project2);
 			UpdateView();
 		}
 
 		private void miFile_Click(object sender, EventArgs e)
 		{
-			_manager.UpdateRecentProjects(miFileRecentProjects, _manager.DefaultProject.RecentProjects);
-			_manager.UpdateRecentSearches(miFileRecentSearches, _manager.DefaultProject.RecentSearchPaths, tbInitialPath);
+			_manager.UpdateRecentProjects(miFileRecentProjects, _manager.Settings.RecentProjects);
+			_manager.UpdateRecentSearches(miFileRecentSearches, _manager.Settings.RecentSearchPaths, tcProjects.SelectedTab as ProjectPage);
 			miFileRecentProjects.Invalidate();
 			miFileRecentSearches.Invalidate();
 		}
 
 		private void miFileOpen_Click(object sender, EventArgs e)
 		{
-			var lastsearchpath = _manager.OpenProject();
-			if (lastsearchpath != null)
-				tbInitialPath.Text = lastsearchpath;
+			_manager.OpenExistingProject(tcProjects);
 			UpdateView();
 		}
 
 		private void miFileSave_Click(object sender, EventArgs e)
 		{
-			_manager.SaveProject();
+			_manager.SaveProject(tcProjects.SelectedTab.Tag as Project2);
 		}
 
 		private void miFileSaveAs_Click(object sender, EventArgs e)
 		{
-			_manager.SaveProjectAs();
+			_manager.SaveProjectAs(tcProjects.SelectedTab.Tag as Project2);
 		}
 
 		private void miFileRead_Click(object sender, EventArgs e)
 		{
+			/*
 			var lastsearchpath = _manager.ChooseScanDirectory();
 			if (lastsearchpath != null)
 				tbInitialPath.Text = lastsearchpath;
@@ -80,18 +81,19 @@ namespace NotesOblitus
 			if (_manager.AutoScan) 
 				return;
 			_manager.ScanAndCollectNotes();
+			 */
 			UpdateView();
 		}
 
 		private void miFileRefresh_Click(object sender, EventArgs e)
 		{
-			_manager.ScanAndCollectNotes();
+			_manager.ScanAndCollectNotes(tcProjects.SelectedTab.Tag as Project2);
 			UpdateView();
 		}
 
 		private void miFileAutoRefresh_Click(object sender, EventArgs e)
 		{
-			_manager.SetAutoScan(miFileAutoRefresh.Checked);
+			//_manager.SetAutoScan(miFileAutoRefresh.Checked);
 		}
 
 		private void miExportXml_Click(object sender, EventArgs e)
@@ -110,7 +112,7 @@ namespace NotesOblitus
 			if (result != DialogResult.OK)
 				return;
 
-			_manager.ExportProject(dialog.FileName, new XmlObjectExporter());
+			_manager.ExportProject(tcProjects.SelectedTab.Tag as Project2, dialog.FileName, new XmlObjectExporter());
 		}
 
 		private void miExportJson_Click(object sender, EventArgs e)
@@ -129,7 +131,7 @@ namespace NotesOblitus
 			if (result != DialogResult.OK)
 				return;
 
-			_manager.ExportProject(dialog.FileName, new JsonObjectExporter());
+			_manager.ExportProject(tcProjects.SelectedTab.Tag as Project2, dialog.FileName, new JsonObjectExporter());
 		}
 
 		private void miFileExit_Click(object sender, EventArgs e)
@@ -139,39 +141,39 @@ namespace NotesOblitus
 
 		private void miViewTable_Click(object sender, EventArgs e)
 		{
-			htcMainView.SelectedIndex = 0;
-			_manager.UpdateCurrentView(dgListNotes);
+			//htcMainView.SelectedIndex = 0;
+			//_manager.UpdateCurrentView(dgListNotes);
 		}
 
 		private void miViewTree_Click(object sender, EventArgs e)
 		{
-			htcMainView.SelectedIndex = 1;
-			_manager.UpdateCurrentView(tvListNotes);
+			//htcMainView.SelectedIndex = 1;
+			//_manager.UpdateCurrentView(tvListNotes);
 		}
 
 		private void miViewStatistics_Click(object sender, EventArgs e)
 		{
-			_manager.ShowStatistics();
+			_manager.ShowStatistics(tcProjects.SelectedTab.Tag as Project2);
 		}
 
 		private void miEditPreview_Click(object sender, EventArgs e)
 		{
-			_manager.OpenPreviewDialog();
+			_manager.OpenPreviewDialog(tcProjects.SelectedTab.Tag as Project2);
 		}
 
 		private void miEditEdit_Click(object sender, EventArgs e)
 		{
-			_manager.RunEditor();
+			_manager.RunEditor(tcProjects.SelectedTab.Tag as Project2);
 		}
 
 		private void miEditDelete_Click(object sender, EventArgs e)
 		{
-			_manager.RemoveNoteFromSource(_manager.CurrentProject2);
+			//_manager.RemoveNoteFromSource(_manager.CurrentProject2);
 		}
 
 		private void miEditOptions_Click(object sender, EventArgs e)
 		{
-			_manager.DisplayOptionsWindow();
+			_manager.DisplayOptionsWindow(tcProjects.SelectedTab.Tag as Project2);
 		}
 
 		private void miAboutHelp_Click(object sender, EventArgs e)
@@ -186,7 +188,7 @@ namespace NotesOblitus
 
 		private void tcProjects_TabMouseDown(object sender, TabMouseEventArgs e)
 		{
-			_manager.CurrentProject2 = e.Page.Tag as Project2;
+			//_manager.CurrentProject2 = e.Page.Tag as Project2;
 		}
 
 #if false
@@ -291,7 +293,7 @@ namespace NotesOblitus
 
 		private void miNotifyAuto_Click(object sender, EventArgs e)
 		{
-			_manager.SetAutoScan(miNotifyAuto.Checked);
+			//_manager.SetAutoScan(miNotifyAuto.Checked);
 		}
 
 		private void miNotifyAbout_Click(object sender, EventArgs e)

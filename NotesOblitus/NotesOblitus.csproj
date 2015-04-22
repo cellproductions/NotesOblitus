@@ -50,6 +50,9 @@
     <ApplicationIcon>icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CellSharpControls">
+      <HintPath>..\..\CellSharpControls\CellSharpControls\bin\Release\CellSharpControls.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -76,17 +79,15 @@
       <DependentUpon>AboutDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="AboutDialogManager.cs" />
-    <Compile Include="Controls\EditableTabControl.cs">
-      <SubType>Component</SubType>
+    <Compile Include="AppSettingsWindow.cs">
+      <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Controls\EditableTabControl.designer.cs">
-      <DependentUpon>EditableTabControl.cs</DependentUpon>
+    <Compile Include="AppSettingsWindow.Designer.cs">
+      <DependentUpon>AppSettingsWindow.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\HiddenTabControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="AutoScanScheduler.cs" />
     <Compile Include="Controls\ProjectPage.cs">
-      <SubType>UserControl</SubType>
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="Controls\ProjectPage.Designer.cs">
       <DependentUpon>ProjectPage.cs</DependentUpon>
@@ -101,7 +102,6 @@
     </Compile>
     <Compile Include="Exporters\IObjectExporter.cs" />
     <Compile Include="Exporters\JsonObjectExporter.cs" />
-    <Compile Include="JsonSerializer.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="OpenMode.cs" />
     <Compile Include="OptionsWindowManager.cs" />
@@ -152,11 +152,11 @@
     </Compile>
     <Compile Include="PreviewDialogManager.cs" />
     <Compile Include="Program.cs" />
+    <None Include="config.cgf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Project.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Controls\TextBoxPlaceHolder.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="ResourceDefaults\SyntaxJsonResource.cs" />
     <Compile Include="SaveMode.cs" />
     <Compile Include="StatisticsData.cs" />
@@ -175,6 +175,9 @@
     <Compile Include="Exporters\XmlObjectExporter.cs" />
     <EmbeddedResource Include="AboutDialog.resx">
       <DependentUpon>AboutDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AppSettingsWindow.resx">
+      <DependentUpon>AppSettingsWindow.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\ProjectPage.resx">
       <DependentUpon>ProjectPage.cs</DependentUpon>

@@ -4,7 +4,7 @@ using System.Windows.Forms;
 
 namespace NotesOblitus.Controls
 {
-	public partial class ProjectPage : UserControl
+	public partial class ProjectPage : TabPage
 	{
 		public class SearchPathEventArgs
 		{
@@ -21,7 +21,7 @@ namespace NotesOblitus.Controls
 		public delegate void SearchPathActivatedEvent(object sender, SearchPathEventArgs e);
 		public delegate void NoteClickedEvent(object sender, NoteClickedEventArgs e);
 
-		public Project2 ProjectOwner { get; internal set; }
+		//public Project2 ProjectOwner { get; internal set; }
 		public string SearchPath
 		{
 			get { return tbInitialPath.Text;  }
@@ -35,7 +35,7 @@ namespace NotesOblitus.Controls
 		public Control CurrentView { get; internal set; }
 		public ViewMode CurrentMode
 		{
-			get { return CurrentView == dgListNotes ? ViewMode.ListView : ViewMode.TreeView; }
+			get { return htcMainView.SelectedIndex == 0 ? ViewMode.ListView : ViewMode.TreeView; }
 			set { htcMainView.SelectedIndex = value == ViewMode.ListView ? 0 : 1; }
 		}
 		public Note CurrentNote { get; internal set; }
@@ -48,6 +48,8 @@ namespace NotesOblitus.Controls
 		public ProjectPage()
 		{
 			InitializeComponent();
+			CurrentMode = ViewMode.ListView;
+			CurrentView = dgListNotes;
 		}
 
 		private void tbInitialPath_KeyDown(object sender, KeyEventArgs e)

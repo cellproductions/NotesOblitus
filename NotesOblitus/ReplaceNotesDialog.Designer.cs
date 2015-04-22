@@ -34,8 +34,8 @@
 			this.bNo = new System.Windows.Forms.Button();
 			this.bYes = new System.Windows.Forms.Button();
 			this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
-			this.tbNoteStart = new NotesOblitus.Controls.TextBoxPlaceHolder();
-			this.tbNoteEnd = new NotesOblitus.Controls.TextBoxPlaceHolder();
+			this.tbNoteStart = new CellSharpControls.TextBoxPlaceHolder();
+			this.tbNoteEnd = new CellSharpControls.TextBoxPlaceHolder();
 			this.tableLayoutPanel1.SuspendLayout();
 			this.flowLayoutPanel1.SuspendLayout();
 			this.tableLayoutPanel2.SuspendLayout();
@@ -160,7 +160,7 @@
 		private System.Windows.Forms.Button bNo;
 		private System.Windows.Forms.Button bYes;
 		private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
-		private Controls.TextBoxPlaceHolder tbNoteStart;
-		private Controls.TextBoxPlaceHolder tbNoteEnd;
+		private CellSharpControls.TextBoxPlaceHolder tbNoteStart;
+		private CellSharpControls.TextBoxPlaceHolder tbNoteEnd;
 	}
 }

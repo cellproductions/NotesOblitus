@@ -70,7 +70,7 @@ namespace NotesOblitus
 			this.miNotifyAuto = new System.Windows.Forms.ToolStripMenuItem();
 			this.miNotifyAbout = new System.Windows.Forms.ToolStripMenuItem();
 			this.miNotifyExit = new System.Windows.Forms.ToolStripMenuItem();
-			this.tcProjects = new EditableTabControl();
+			this.tcProjects = new CellSharpControls.EditableTabControl();
 			this.msMainMenu.SuspendLayout();
 			this.msNotifyMenu.SuspendLayout();
 			this.SuspendLayout();
@@ -375,7 +375,7 @@ namespace NotesOblitus
 			this.tcProjects.SelectedIndex = 0;
 			this.tcProjects.Size = new System.Drawing.Size(784, 538);
 			this.tcProjects.TabIndex = 1;
-			this.tcProjects.TabMouseDown += new EditableTabControl.TabMouseEvent(tcProjects_TabMouseDown);
+			this.tcProjects.TabMouseDown += new CellSharpControls.EditableTabControl.TabMouseEvent(tcProjects_TabMouseDown);
 			// 
 			// NotesOblitusApp
 			// 
@@ -438,7 +438,7 @@ namespace NotesOblitus
 		private System.Windows.Forms.ToolStripMenuItem miFileAutoRefresh;
 		private System.Windows.Forms.ToolStripMenuItem miFileRecentProjects;
 		private System.Windows.Forms.ToolStripMenuItem miFileRecentSearches;
-		private EditableTabControl tcProjects;
+		private CellSharpControls.EditableTabControl tcProjects;
 	}
 }
 

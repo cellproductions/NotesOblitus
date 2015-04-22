@@ -29,8 +29,8 @@
 		private void InitializeComponent()
 		{
 			this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-			this.tbInitialPath = new NotesOblitus.Controls.TextBoxPlaceHolder();
-			this.htcMainView = new NotesOblitus.Controls.HiddenTabControl();
+			this.tbInitialPath = new CellSharpControls.TextBoxPlaceHolder();
+			this.htcMainView = new CellSharpControls.HiddenTabControl();
 			this.tpTable = new System.Windows.Forms.TabPage();
 			this.dgListNotes = new System.Windows.Forms.DataGridView();
 			this.cFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -171,8 +171,8 @@
 			// 
 			// ProjectPage
 			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+			//this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+			//this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.Controls.Add(this.tableLayoutPanel1);
 			this.Name = "ProjectPage";
 			this.Size = new System.Drawing.Size(545, 425);
@@ -189,8 +189,8 @@
 		#endregion
 
 		private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-		private TextBoxPlaceHolder tbInitialPath;
-		private HiddenTabControl htcMainView;
+		private CellSharpControls.TextBoxPlaceHolder tbInitialPath;
+		private CellSharpControls.HiddenTabControl htcMainView;
 		private System.Windows.Forms.TabPage tpTable;
 		private System.Windows.Forms.DataGridView dgListNotes;
 		private System.Windows.Forms.DataGridViewTextBoxColumn cFile;

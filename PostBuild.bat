@@ -12,7 +12,7 @@ mkdir %3Export
 :: Merge dlls and the exe together
 echo Merging assemblies
 cd %1
-set assemblies=%2 Newtonsoft.Json.dll
+set assemblies=%2 Newtonsoft.Json.dll CellSharpControls.dll
 %3packages\ilmerge.2.14.1208\tools\ILMerge.exe %assemblies% /out:NotesOblitus.exe
 echo Assemblies merged: %assemblies%
 :: Copy all the relavant files to the Export folder
