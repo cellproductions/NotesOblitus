@@ -61,77 +61,9 @@ namespace NotesOblitus
 			UpdateView();
 		}
 
-		private void miFileSave_Click(object sender, EventArgs e)
-		{
-			_manager.SaveProject(tcProjects.SelectedTab.Tag as Project2);
-		}
-
-		private void miFileSaveAs_Click(object sender, EventArgs e)
-		{
-			_manager.SaveProjectAs(tcProjects.SelectedTab.Tag as Project2);
-		}
-
-		private void miFileRead_Click(object sender, EventArgs e)
-		{
-			/*
-			var lastsearchpath = _manager.ChooseScanDirectory();
-			if (lastsearchpath != null)
-				tbInitialPath.Text = lastsearchpath;
-
-			if (_manager.AutoScan) 
-				return;
-			_manager.ScanAndCollectNotes();
-			 */
-			UpdateView();
-		}
-
-		private void miFileRefresh_Click(object sender, EventArgs e)
-		{
-			_manager.ScanAndCollectNotes(tcProjects.SelectedTab.Tag as Project2);
-			UpdateView();
-		}
-
 		private void miFileAutoRefresh_Click(object sender, EventArgs e)
 		{
 			//_manager.SetAutoScan(miFileAutoRefresh.Checked);
-		}
-
-		private void miExportXml_Click(object sender, EventArgs e)
-		{
-			var dialog = new SaveFileDialog
-			{
-				CheckPathExists = true,
-				AddExtension = true,
-				OverwritePrompt = true,
-				DefaultExt = ".xml",
-				Filter = @"XML files (*.xml)|",
-				Title = @"Export as XML"
-			};
-
-			var result = dialog.ShowDialog(this);
-			if (result != DialogResult.OK)
-				return;
-
-			_manager.ExportProject(tcProjects.SelectedTab.Tag as Project2, dialog.FileName, new XmlObjectExporter());
-		}
-
-		private void miExportJson_Click(object sender, EventArgs e)
-		{
-			var dialog = new SaveFileDialog
-			{
-				CheckPathExists = true,
-				AddExtension = true,
-				OverwritePrompt = true,
-				DefaultExt = ".json",
-				Filter = @"JSON files (*.json)|",
-				Title = @"Export as JSON"
-			};
-
-			var result = dialog.ShowDialog(this);
-			if (result != DialogResult.OK)
-				return;
-
-			_manager.ExportProject(tcProjects.SelectedTab.Tag as Project2, dialog.FileName, new JsonObjectExporter());
 		}
 
 		private void miFileExit_Click(object sender, EventArgs e)
@@ -139,41 +71,19 @@ namespace NotesOblitus
 			Close();
 		}
 
-		private void miViewTable_Click(object sender, EventArgs e)
-		{
-			//htcMainView.SelectedIndex = 0;
-			//_manager.UpdateCurrentView(dgListNotes);
-		}
-
-		private void miViewTree_Click(object sender, EventArgs e)
-		{
-			//htcMainView.SelectedIndex = 1;
-			//_manager.UpdateCurrentView(tvListNotes);
-		}
-
-		private void miViewStatistics_Click(object sender, EventArgs e)
-		{
-			_manager.ShowStatistics(tcProjects.SelectedTab.Tag as Project2);
-		}
-
 		private void miEditPreview_Click(object sender, EventArgs e)
 		{
-			_manager.OpenPreviewDialog(tcProjects.SelectedTab.Tag as Project2);
+			//_manager.OpenPreviewDialog(tcProjects.SelectedTab.Tag as Project2);
 		}
 
 		private void miEditEdit_Click(object sender, EventArgs e)
 		{
-			_manager.RunEditor(tcProjects.SelectedTab.Tag as Project2);
+			//_manager.RunEditor(tcProjects.SelectedTab.Tag as Project2);
 		}
 
 		private void miEditDelete_Click(object sender, EventArgs e)
 		{
 			//_manager.RemoveNoteFromSource(_manager.CurrentProject2);
-		}
-
-		private void miEditOptions_Click(object sender, EventArgs e)
-		{
-			_manager.DisplayOptionsWindow(tcProjects.SelectedTab.Tag as Project2);
 		}
 
 		private void miAboutHelp_Click(object sender, EventArgs e)
@@ -288,7 +198,7 @@ namespace NotesOblitus
 
 		private void msNotifyMenu_Opening(object sender, System.ComponentModel.CancelEventArgs e)
 		{
-			miNotifyAuto.Checked = miFileAutoRefresh.Checked;
+			//miNotifyAuto.Checked = miFileAutoRefresh.Checked;
 		}
 
 		private void miNotifyAuto_Click(object sender, EventArgs e)
@@ -327,6 +237,114 @@ namespace NotesOblitus
 			menu.Items.Add(deleteItem);
 
 			menu.Show(location);
+		}
+
+		private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			if (tcProjects.SelectedTab != null)
+				_manager.SaveProject(tcProjects.SelectedTab.Tag as Project2);
+		}
+
+		private void miProjectSaveAs_Click(object sender, EventArgs e)
+		{
+			if (tcProjects.SelectedTab != null) 
+				_manager.SaveProjectAs(tcProjects.SelectedTab.Tag as Project2);
+		}
+
+		private void miProjectExportXml_Click(object sender, EventArgs e)
+		{
+			if (tcProjects.SelectedTab == null)
+				return;
+
+			var dialog = new SaveFileDialog
+			{
+				CheckPathExists = true,
+				AddExtension = true,
+				OverwritePrompt = true,
+				DefaultExt = ".xml",
+				Filter = @"XML files (*.xml)|",
+				Title = @"Export as XML"
+			};
+
+			var result = dialog.ShowDialog(this);
+			if (result != DialogResult.OK)
+				return;
+
+			_manager.ExportProject(tcProjects.SelectedTab.Tag as Project2, dialog.FileName, new XmlObjectExporter());
+		}
+
+		private void miProjectExportJson_Click(object sender, EventArgs e)
+		{
+			if (tcProjects.SelectedTab == null)
+				return;
+
+			var dialog = new SaveFileDialog
+			{
+				CheckPathExists = true,
+				AddExtension = true,
+				OverwritePrompt = true,
+				DefaultExt = ".json",
+				Filter = @"JSON files (*.json)|",
+				Title = @"Export as JSON"
+			};
+
+			var result = dialog.ShowDialog(this);
+			if (result != DialogResult.OK)
+				return;
+
+			_manager.ExportProject(tcProjects.SelectedTab.Tag as Project2, dialog.FileName, new JsonObjectExporter());
+		}
+
+		private void miProjectScanDir_Click(object sender, EventArgs e)
+		{
+			if (tcProjects.SelectedTab == null)
+				return;
+
+			var lastsearchpath = _manager.ChooseScanDirectory(tcProjects.SelectedTab.Tag as Project2);
+			if (lastsearchpath != null)
+				((ProjectPage)tcProjects.SelectedTab).SearchPath = lastsearchpath;
+			((ProjectPage)tcProjects.SelectedTab).ActivateSearchPath();
+			_manager.ScanAndCollectNotes(tcProjects.SelectedTab.Tag as Project2);
+			UpdateView();
+		}
+
+		private void miProjectRefresh_Click(object sender, EventArgs e)
+		{
+			if (tcProjects.SelectedTab == null)
+				return;
+
+			_manager.ScanAndCollectNotes(tcProjects.SelectedTab.Tag as Project2);
+			UpdateView();
+		}
+
+		private void miProjectDisplayTable_Click(object sender, EventArgs e)
+		{
+			if (tcProjects.SelectedTab == null)
+				return;
+
+			((ProjectPage)tcProjects.SelectedTab).CurrentMode = ViewMode.ListView;
+			_manager.UpdateCurrentView(tcProjects.SelectedTab.Tag as Project2);
+		}
+
+		private void miProjectDisplayTree_Click(object sender, EventArgs e)
+		{
+			if (tcProjects.SelectedTab == null)
+				return;
+
+			((ProjectPage)tcProjects.SelectedTab).CurrentMode = ViewMode.TreeView;
+			_manager.UpdateCurrentView(tcProjects.SelectedTab.Tag as Project2);
+		}
+
+		private void miProjectOptions_Click(object sender, EventArgs e)
+		{
+			if (tcProjects.SelectedTab != null) 
+				_manager.DisplayOptionsWindow(tcProjects.SelectedTab.Tag as Project2);
+		}
+
+		private void miProjectStatistics_Click(object sender, EventArgs e)
+		{
+			if (tcProjects.SelectedTab != null) 
+				_manager.ShowStatistics(tcProjects.SelectedTab.Tag as Project2);
 		}
 	}
 }

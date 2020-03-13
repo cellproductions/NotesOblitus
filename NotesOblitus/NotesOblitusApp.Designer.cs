@@ -37,40 +37,37 @@ namespace NotesOblitus
 			this.msMainMenu = new System.Windows.Forms.MenuStrip();
 			this.miFile = new System.Windows.Forms.ToolStripMenuItem();
 			this.miFileOpen = new System.Windows.Forms.ToolStripMenuItem();
-			this.miFileSave = new System.Windows.Forms.ToolStripMenuItem();
-			this.miFileSaveAs = new System.Windows.Forms.ToolStripMenuItem();
-			this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-			this.miFileRead = new System.Windows.Forms.ToolStripMenuItem();
-			this.miFileRefresh = new System.Windows.Forms.ToolStripMenuItem();
-			this.miFileAutoRefresh = new System.Windows.Forms.ToolStripMenuItem();
-			this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-			this.miFileExport = new System.Windows.Forms.ToolStripMenuItem();
-			this.miExportXml = new System.Windows.Forms.ToolStripMenuItem();
-			this.miExportJson = new System.Windows.Forms.ToolStripMenuItem();
 			this.miFileRecentProjects = new System.Windows.Forms.ToolStripMenuItem();
 			this.miFileRecentSearches = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
 			this.miFileExit = new System.Windows.Forms.ToolStripMenuItem();
 			this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.displayAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.miViewTable = new System.Windows.Forms.ToolStripMenuItem();
-			this.miViewTree = new System.Windows.Forms.ToolStripMenuItem();
-			this.miViewStatistics = new System.Windows.Forms.ToolStripMenuItem();
 			this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.miEditPreview = new System.Windows.Forms.ToolStripMenuItem();
-			this.miEditEdit = new System.Windows.Forms.ToolStripMenuItem();
-			this.miEditDelete = new System.Windows.Forms.ToolStripMenuItem();
-			this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
-			this.miEditOptions = new System.Windows.Forms.ToolStripMenuItem();
 			this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.miAboutHelp = new System.Windows.Forms.ToolStripMenuItem();
 			this.miAboutAbout = new System.Windows.Forms.ToolStripMenuItem();
 			this.niMainNotify = new System.Windows.Forms.NotifyIcon(this.components);
 			this.msNotifyMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
-			this.miNotifyAuto = new System.Windows.Forms.ToolStripMenuItem();
 			this.miNotifyAbout = new System.Windows.Forms.ToolStripMenuItem();
 			this.miNotifyExit = new System.Windows.Forms.ToolStripMenuItem();
 			this.tcProjects = new CellSharpControls.EditableTabControl();
+			this.miProjectSave = new System.Windows.Forms.ToolStripMenuItem();
+			this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.miProjectSaveAs = new System.Windows.Forms.ToolStripMenuItem();
+			this.exportAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
+			this.miProjectRefresh = new System.Windows.Forms.ToolStripMenuItem();
+			this.miProjectScanDir = new System.Windows.Forms.ToolStripMenuItem();
+			this.displayAsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
+			this.miProjectOptions = new System.Windows.Forms.ToolStripMenuItem();
+			this.miProjectStatistics = new System.Windows.Forms.ToolStripMenuItem();
+			this.preferencesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.miProjectExportXml = new System.Windows.Forms.ToolStripMenuItem();
+			this.miProjectExportJson = new System.Windows.Forms.ToolStripMenuItem();
+			this.miProjectDisplayTable = new System.Windows.Forms.ToolStripMenuItem();
+			this.miProjectDisplayTree = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
 			this.msMainMenu.SuspendLayout();
 			this.msNotifyMenu.SuspendLayout();
 			this.SuspendLayout();
@@ -80,6 +77,7 @@ namespace NotesOblitus
 			this.msMainMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.miFile,
             this.viewToolStripMenuItem,
+            this.miProjectSave,
             this.editToolStripMenuItem,
             this.aboutToolStripMenuItem});
 			this.msMainMenu.Location = new System.Drawing.Point(0, 0);
@@ -92,14 +90,7 @@ namespace NotesOblitus
 			// 
 			this.miFile.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.miFileOpen,
-            this.miFileSave,
-            this.miFileSaveAs,
             this.toolStripSeparator1,
-            this.miFileRead,
-            this.miFileRefresh,
-            this.miFileAutoRefresh,
-            this.toolStripSeparator2,
-            this.miFileExport,
             this.miFileRecentProjects,
             this.miFileRecentSearches,
             this.toolStripSeparator3,
@@ -113,195 +104,47 @@ namespace NotesOblitus
 			// 
 			this.miFileOpen.Name = "miFileOpen";
 			this.miFileOpen.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-			this.miFileOpen.Size = new System.Drawing.Size(195, 22);
+			this.miFileOpen.Size = new System.Drawing.Size(180, 22);
 			this.miFileOpen.Text = "Open";
 			this.miFileOpen.Click += new System.EventHandler(this.miFileOpen_Click);
-			// 
-			// miFileSave
-			// 
-			this.miFileSave.Name = "miFileSave";
-			this.miFileSave.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-			this.miFileSave.Size = new System.Drawing.Size(195, 22);
-			this.miFileSave.Text = "Save";
-			this.miFileSave.Click += new System.EventHandler(this.miFileSave_Click);
-			// 
-			// miFileSaveAs
-			// 
-			this.miFileSaveAs.Name = "miFileSaveAs";
-			this.miFileSaveAs.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift) 
-            | System.Windows.Forms.Keys.S)));
-			this.miFileSaveAs.Size = new System.Drawing.Size(195, 22);
-			this.miFileSaveAs.Text = "Save As...";
-			this.miFileSaveAs.Click += new System.EventHandler(this.miFileSaveAs_Click);
-			// 
-			// toolStripSeparator1
-			// 
-			this.toolStripSeparator1.Name = "toolStripSeparator1";
-			this.toolStripSeparator1.Size = new System.Drawing.Size(192, 6);
-			// 
-			// miFileRead
-			// 
-			this.miFileRead.Name = "miFileRead";
-			this.miFileRead.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.A)));
-			this.miFileRead.Size = new System.Drawing.Size(195, 22);
-			this.miFileRead.Text = "Scan Directory";
-			this.miFileRead.Click += new System.EventHandler(this.miFileRead_Click);
-			// 
-			// miFileRefresh
-			// 
-			this.miFileRefresh.Name = "miFileRefresh";
-			this.miFileRefresh.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.R)));
-			this.miFileRefresh.Size = new System.Drawing.Size(195, 22);
-			this.miFileRefresh.Text = "Refresh";
-			this.miFileRefresh.Click += new System.EventHandler(this.miFileRefresh_Click);
-			// 
-			// miFileAutoRefresh
-			// 
-			this.miFileAutoRefresh.CheckOnClick = true;
-			this.miFileAutoRefresh.Name = "miFileAutoRefresh";
-			this.miFileAutoRefresh.Size = new System.Drawing.Size(195, 22);
-			this.miFileAutoRefresh.Text = "Auto Refresh";
-			this.miFileAutoRefresh.Click += new System.EventHandler(this.miFileAutoRefresh_Click);
-			// 
-			// toolStripSeparator2
-			// 
-			this.toolStripSeparator2.Name = "toolStripSeparator2";
-			this.toolStripSeparator2.Size = new System.Drawing.Size(192, 6);
-			// 
-			// miFileExport
-			// 
-			this.miFileExport.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.miExportXml,
-            this.miExportJson});
-			this.miFileExport.Name = "miFileExport";
-			this.miFileExport.Size = new System.Drawing.Size(195, 22);
-			this.miFileExport.Text = "Export As...";
-			// 
-			// miExportXml
-			// 
-			this.miExportXml.Name = "miExportXml";
-			this.miExportXml.Size = new System.Drawing.Size(98, 22);
-			this.miExportXml.Text = "XML";
-			this.miExportXml.Click += new System.EventHandler(this.miExportXml_Click);
-			// 
-			// miExportJson
-			// 
-			this.miExportJson.Name = "miExportJson";
-			this.miExportJson.Size = new System.Drawing.Size(98, 22);
-			this.miExportJson.Text = "Json";
-			this.miExportJson.Click += new System.EventHandler(this.miExportJson_Click);
 			// 
 			// miFileRecentProjects
 			// 
 			this.miFileRecentProjects.Name = "miFileRecentProjects";
-			this.miFileRecentProjects.Size = new System.Drawing.Size(195, 22);
+			this.miFileRecentProjects.Size = new System.Drawing.Size(180, 22);
 			this.miFileRecentProjects.Text = "Recent Projects";
 			// 
 			// miFileRecentSearches
 			// 
 			this.miFileRecentSearches.Name = "miFileRecentSearches";
-			this.miFileRecentSearches.Size = new System.Drawing.Size(195, 22);
+			this.miFileRecentSearches.Size = new System.Drawing.Size(180, 22);
 			this.miFileRecentSearches.Text = "Recent Search Paths";
 			// 
 			// toolStripSeparator3
 			// 
 			this.toolStripSeparator3.Name = "toolStripSeparator3";
-			this.toolStripSeparator3.Size = new System.Drawing.Size(192, 6);
+			this.toolStripSeparator3.Size = new System.Drawing.Size(177, 6);
 			// 
 			// miFileExit
 			// 
 			this.miFileExit.Name = "miFileExit";
-			this.miFileExit.Size = new System.Drawing.Size(195, 22);
+			this.miFileExit.Size = new System.Drawing.Size(180, 22);
 			this.miFileExit.Text = "Exit";
 			this.miFileExit.Click += new System.EventHandler(this.miFileExit_Click);
 			// 
 			// viewToolStripMenuItem
 			// 
-			this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.displayAsToolStripMenuItem,
-            this.miViewStatistics});
 			this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
 			this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
 			this.viewToolStripMenuItem.Text = "View";
 			// 
-			// displayAsToolStripMenuItem
-			// 
-			this.displayAsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.miViewTable,
-            this.miViewTree});
-			this.displayAsToolStripMenuItem.Name = "displayAsToolStripMenuItem";
-			this.displayAsToolStripMenuItem.Size = new System.Drawing.Size(128, 22);
-			this.displayAsToolStripMenuItem.Text = "Display As";
-			// 
-			// miViewTable
-			// 
-			this.miViewTable.Name = "miViewTable";
-			this.miViewTable.Size = new System.Drawing.Size(103, 22);
-			this.miViewTable.Text = "Table";
-			this.miViewTable.Click += new System.EventHandler(this.miViewTable_Click);
-			// 
-			// miViewTree
-			// 
-			this.miViewTree.Name = "miViewTree";
-			this.miViewTree.Size = new System.Drawing.Size(103, 22);
-			this.miViewTree.Text = "Tree";
-			this.miViewTree.Click += new System.EventHandler(this.miViewTree_Click);
-			// 
-			// miViewStatistics
-			// 
-			this.miViewStatistics.Name = "miViewStatistics";
-			this.miViewStatistics.Size = new System.Drawing.Size(128, 22);
-			this.miViewStatistics.Text = "Statistics";
-			this.miViewStatistics.Click += new System.EventHandler(this.miViewStatistics_Click);
-			// 
 			// editToolStripMenuItem
 			// 
 			this.editToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.miEditPreview,
-            this.miEditEdit,
-            this.miEditDelete,
-            this.toolStripSeparator4,
-            this.miEditOptions});
+            this.preferencesToolStripMenuItem});
 			this.editToolStripMenuItem.Name = "editToolStripMenuItem";
 			this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
 			this.editToolStripMenuItem.Text = "Edit";
-			// 
-			// miEditPreview
-			// 
-			this.miEditPreview.Name = "miEditPreview";
-			this.miEditPreview.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.P)));
-			this.miEditPreview.Size = new System.Drawing.Size(187, 22);
-			this.miEditPreview.Text = "Preview";
-			this.miEditPreview.Click += new System.EventHandler(this.miEditPreview_Click);
-			// 
-			// miEditEdit
-			// 
-			this.miEditEdit.Name = "miEditEdit";
-			this.miEditEdit.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.E)));
-			this.miEditEdit.Size = new System.Drawing.Size(187, 22);
-			this.miEditEdit.Text = "Edit Externally";
-			this.miEditEdit.Click += new System.EventHandler(this.miEditEdit_Click);
-			// 
-			// miEditDelete
-			// 
-			this.miEditDelete.Name = "miEditDelete";
-			this.miEditDelete.ShortcutKeys = System.Windows.Forms.Keys.Delete;
-			this.miEditDelete.Size = new System.Drawing.Size(187, 22);
-			this.miEditDelete.Text = "Delete Selected";
-			this.miEditDelete.Click += new System.EventHandler(this.miEditDelete_Click);
-			// 
-			// toolStripSeparator4
-			// 
-			this.toolStripSeparator4.Name = "toolStripSeparator4";
-			this.toolStripSeparator4.Size = new System.Drawing.Size(184, 6);
-			// 
-			// miEditOptions
-			// 
-			this.miEditOptions.Name = "miEditOptions";
-			this.miEditOptions.ShortcutKeys = System.Windows.Forms.Keys.F3;
-			this.miEditOptions.Size = new System.Drawing.Size(187, 22);
-			this.miEditOptions.Text = "Options";
-			this.miEditOptions.Click += new System.EventHandler(this.miEditOptions_Click);
 			// 
 			// aboutToolStripMenuItem
 			// 
@@ -316,7 +159,7 @@ namespace NotesOblitus
 			// 
 			this.miAboutHelp.Name = "miAboutHelp";
 			this.miAboutHelp.ShortcutKeys = System.Windows.Forms.Keys.F1;
-			this.miAboutHelp.Size = new System.Drawing.Size(126, 22);
+			this.miAboutHelp.Size = new System.Drawing.Size(152, 22);
 			this.miAboutHelp.Text = "Help";
 			this.miAboutHelp.Click += new System.EventHandler(this.miAboutHelp_Click);
 			// 
@@ -324,7 +167,7 @@ namespace NotesOblitus
 			// 
 			this.miAboutAbout.Name = "miAboutAbout";
 			this.miAboutAbout.ShortcutKeys = System.Windows.Forms.Keys.F2;
-			this.miAboutAbout.Size = new System.Drawing.Size(126, 22);
+			this.miAboutAbout.Size = new System.Drawing.Size(152, 22);
 			this.miAboutAbout.Text = "About";
 			this.miAboutAbout.Click += new System.EventHandler(this.miAboutAbout_Click);
 			// 
@@ -338,32 +181,23 @@ namespace NotesOblitus
 			// msNotifyMenu
 			// 
 			this.msNotifyMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.miNotifyAuto,
             this.miNotifyAbout,
             this.miNotifyExit});
 			this.msNotifyMenu.Name = "msNotifyMenu";
-			this.msNotifyMenu.Size = new System.Drawing.Size(143, 70);
+			this.msNotifyMenu.Size = new System.Drawing.Size(153, 70);
 			this.msNotifyMenu.Opening += new System.ComponentModel.CancelEventHandler(this.msNotifyMenu_Opening);
-			// 
-			// miNotifyAuto
-			// 
-			this.miNotifyAuto.CheckOnClick = true;
-			this.miNotifyAuto.Name = "miNotifyAuto";
-			this.miNotifyAuto.Size = new System.Drawing.Size(142, 22);
-			this.miNotifyAuto.Text = "Auto Refresh";
-			this.miNotifyAuto.Click += new System.EventHandler(this.miNotifyAuto_Click);
 			// 
 			// miNotifyAbout
 			// 
 			this.miNotifyAbout.Name = "miNotifyAbout";
-			this.miNotifyAbout.Size = new System.Drawing.Size(142, 22);
+			this.miNotifyAbout.Size = new System.Drawing.Size(152, 22);
 			this.miNotifyAbout.Text = "About";
 			this.miNotifyAbout.Click += new System.EventHandler(this.miNotifyAbout_Click);
 			// 
 			// miNotifyExit
 			// 
 			this.miNotifyExit.Name = "miNotifyExit";
-			this.miNotifyExit.Size = new System.Drawing.Size(142, 22);
+			this.miNotifyExit.Size = new System.Drawing.Size(152, 22);
 			this.miNotifyExit.Text = "Exit";
 			this.miNotifyExit.Click += new System.EventHandler(this.miNotifyExit_Click);
 			// 
@@ -372,10 +206,140 @@ namespace NotesOblitus
 			this.tcProjects.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.tcProjects.Location = new System.Drawing.Point(0, 24);
 			this.tcProjects.Name = "tcProjects";
-			this.tcProjects.SelectedIndex = 0;
 			this.tcProjects.Size = new System.Drawing.Size(784, 538);
 			this.tcProjects.TabIndex = 1;
-			this.tcProjects.TabMouseDown += new CellSharpControls.EditableTabControl.TabMouseEvent(tcProjects_TabMouseDown);
+			this.tcProjects.TabMouseDown += new CellSharpControls.EditableTabControl.TabMouseEvent(this.tcProjects_TabMouseDown);
+			// 
+			// miProjectSave
+			// 
+			this.miProjectSave.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.saveToolStripMenuItem,
+            this.miProjectSaveAs,
+            this.exportAsToolStripMenuItem,
+            this.toolStripSeparator5,
+            this.miProjectScanDir,
+            this.miProjectRefresh,
+            this.displayAsToolStripMenuItem1,
+            this.toolStripSeparator6,
+            this.miProjectOptions,
+            this.miProjectStatistics});
+			this.miProjectSave.Name = "miProjectSave";
+			this.miProjectSave.Size = new System.Drawing.Size(56, 20);
+			this.miProjectSave.Text = "Project";
+			// 
+			// saveToolStripMenuItem
+			// 
+			this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
+			this.saveToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
+			this.saveToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
+			this.saveToolStripMenuItem.Text = "Save";
+			this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
+			// 
+			// miProjectSaveAs
+			// 
+			this.miProjectSaveAs.Name = "miProjectSaveAs";
+			this.miProjectSaveAs.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift) 
+            | System.Windows.Forms.Keys.S)));
+			this.miProjectSaveAs.Size = new System.Drawing.Size(195, 22);
+			this.miProjectSaveAs.Text = "Save As...";
+			this.miProjectSaveAs.Click += new System.EventHandler(this.miProjectSaveAs_Click);
+			// 
+			// exportAsToolStripMenuItem
+			// 
+			this.exportAsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.miProjectExportXml,
+            this.miProjectExportJson});
+			this.exportAsToolStripMenuItem.Name = "exportAsToolStripMenuItem";
+			this.exportAsToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
+			this.exportAsToolStripMenuItem.Text = "Export As...";
+			// 
+			// toolStripSeparator5
+			// 
+			this.toolStripSeparator5.Name = "toolStripSeparator5";
+			this.toolStripSeparator5.Size = new System.Drawing.Size(192, 6);
+			// 
+			// miProjectRefresh
+			// 
+			this.miProjectRefresh.Name = "miProjectRefresh";
+			this.miProjectRefresh.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.R)));
+			this.miProjectRefresh.Size = new System.Drawing.Size(195, 22);
+			this.miProjectRefresh.Text = "Refresh";
+			this.miProjectRefresh.Click += new System.EventHandler(this.miProjectRefresh_Click);
+			// 
+			// miProjectScanDir
+			// 
+			this.miProjectScanDir.Name = "miProjectScanDir";
+			this.miProjectScanDir.Size = new System.Drawing.Size(195, 22);
+			this.miProjectScanDir.Text = "Scan Directory";
+			this.miProjectScanDir.Click += new System.EventHandler(this.miProjectScanDir_Click);
+			// 
+			// displayAsToolStripMenuItem1
+			// 
+			this.displayAsToolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.miProjectDisplayTable,
+            this.miProjectDisplayTree});
+			this.displayAsToolStripMenuItem1.Name = "displayAsToolStripMenuItem1";
+			this.displayAsToolStripMenuItem1.Size = new System.Drawing.Size(195, 22);
+			this.displayAsToolStripMenuItem1.Text = "Display As...";
+			// 
+			// toolStripSeparator6
+			// 
+			this.toolStripSeparator6.Name = "toolStripSeparator6";
+			this.toolStripSeparator6.Size = new System.Drawing.Size(192, 6);
+			// 
+			// miProjectOptions
+			// 
+			this.miProjectOptions.Name = "miProjectOptions";
+			this.miProjectOptions.ShortcutKeys = System.Windows.Forms.Keys.F3;
+			this.miProjectOptions.Size = new System.Drawing.Size(195, 22);
+			this.miProjectOptions.Text = "Options";
+			this.miProjectOptions.Click += new System.EventHandler(this.miProjectOptions_Click);
+			// 
+			// miProjectStatistics
+			// 
+			this.miProjectStatistics.Name = "miProjectStatistics";
+			this.miProjectStatistics.Size = new System.Drawing.Size(195, 22);
+			this.miProjectStatistics.Text = "Statistics";
+			this.miProjectStatistics.Click += new System.EventHandler(this.miProjectStatistics_Click);
+			// 
+			// preferencesToolStripMenuItem
+			// 
+			this.preferencesToolStripMenuItem.Name = "preferencesToolStripMenuItem";
+			this.preferencesToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.preferencesToolStripMenuItem.Text = "Preferences";
+			// 
+			// miProjectExportXml
+			// 
+			this.miProjectExportXml.Name = "miProjectExportXml";
+			this.miProjectExportXml.Size = new System.Drawing.Size(152, 22);
+			this.miProjectExportXml.Text = "XML";
+			this.miProjectExportXml.Click += new System.EventHandler(this.miProjectExportXml_Click);
+			// 
+			// miProjectExportJson
+			// 
+			this.miProjectExportJson.Name = "miProjectExportJson";
+			this.miProjectExportJson.Size = new System.Drawing.Size(152, 22);
+			this.miProjectExportJson.Text = "Json";
+			this.miProjectExportJson.Click += new System.EventHandler(this.miProjectExportJson_Click);
+			// 
+			// miProjectDisplayTable
+			// 
+			this.miProjectDisplayTable.Name = "miProjectDisplayTable";
+			this.miProjectDisplayTable.Size = new System.Drawing.Size(152, 22);
+			this.miProjectDisplayTable.Text = "Table";
+			this.miProjectDisplayTable.Click += new System.EventHandler(this.miProjectDisplayTable_Click);
+			// 
+			// miProjectDisplayTree
+			// 
+			this.miProjectDisplayTree.Name = "miProjectDisplayTree";
+			this.miProjectDisplayTree.Size = new System.Drawing.Size(152, 22);
+			this.miProjectDisplayTree.Text = "Tree";
+			this.miProjectDisplayTree.Click += new System.EventHandler(this.miProjectDisplayTree_Click);
+			// 
+			// toolStripSeparator1
+			// 
+			this.toolStripSeparator1.Name = "toolStripSeparator1";
+			this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
 			// 
 			// NotesOblitusApp
 			// 
@@ -405,40 +369,37 @@ namespace NotesOblitus
 		private System.Windows.Forms.MenuStrip msMainMenu;
 		private System.Windows.Forms.ToolStripMenuItem miFile;
 		private System.Windows.Forms.ToolStripMenuItem miFileOpen;
-		private System.Windows.Forms.ToolStripMenuItem miFileSave;
-		private System.Windows.Forms.ToolStripMenuItem miFileSaveAs;
-		private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-		private System.Windows.Forms.ToolStripMenuItem miFileRead;
-		private System.Windows.Forms.ToolStripMenuItem miFileRefresh;
-		private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
-		private System.Windows.Forms.ToolStripMenuItem miFileExport;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
 		private System.Windows.Forms.ToolStripMenuItem miFileExit;
 		private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem displayAsToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem miViewTable;
-		private System.Windows.Forms.ToolStripMenuItem miViewTree;
-		private System.Windows.Forms.ToolStripMenuItem miViewStatistics;
 		private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem miEditPreview;
-		private System.Windows.Forms.ToolStripMenuItem miEditEdit;
-		private System.Windows.Forms.ToolStripMenuItem miEditDelete;
-		private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
-		private System.Windows.Forms.ToolStripMenuItem miEditOptions;
 		private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem miAboutHelp;
 		private System.Windows.Forms.ToolStripMenuItem miAboutAbout;
-		private System.Windows.Forms.ToolStripMenuItem miExportXml;
-		private System.Windows.Forms.ToolStripMenuItem miExportJson;
 		private System.Windows.Forms.NotifyIcon niMainNotify;
 		private System.Windows.Forms.ContextMenuStrip msNotifyMenu;
-		private System.Windows.Forms.ToolStripMenuItem miNotifyAuto;
 		private System.Windows.Forms.ToolStripMenuItem miNotifyAbout;
 		private System.Windows.Forms.ToolStripMenuItem miNotifyExit;
-		private System.Windows.Forms.ToolStripMenuItem miFileAutoRefresh;
 		private System.Windows.Forms.ToolStripMenuItem miFileRecentProjects;
 		private System.Windows.Forms.ToolStripMenuItem miFileRecentSearches;
 		private CellSharpControls.EditableTabControl tcProjects;
+		private System.Windows.Forms.ToolStripMenuItem miProjectSave;
+		private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem miProjectSaveAs;
+		private System.Windows.Forms.ToolStripMenuItem exportAsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
+		private System.Windows.Forms.ToolStripMenuItem miProjectScanDir;
+		private System.Windows.Forms.ToolStripMenuItem miProjectRefresh;
+		private System.Windows.Forms.ToolStripMenuItem displayAsToolStripMenuItem1;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator6;
+		private System.Windows.Forms.ToolStripMenuItem miProjectOptions;
+		private System.Windows.Forms.ToolStripMenuItem miProjectStatistics;
+		private System.Windows.Forms.ToolStripMenuItem preferencesToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem miProjectExportXml;
+		private System.Windows.Forms.ToolStripMenuItem miProjectExportJson;
+		private System.Windows.Forms.ToolStripMenuItem miProjectDisplayTable;
+		private System.Windows.Forms.ToolStripMenuItem miProjectDisplayTree;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
 	}
 }
 

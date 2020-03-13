@@ -151,5 +151,11 @@ namespace NotesOblitus.Controls
 					Location = tvListNotes.PointToScreen(e.Location)
 				});
 		}
+
+		public void ActivateSearchPath()
+		{
+			if (SearchPathActivated != null)
+				SearchPathActivated(this, new SearchPathEventArgs { Path = SearchPath });
+		}
 	}
 }
