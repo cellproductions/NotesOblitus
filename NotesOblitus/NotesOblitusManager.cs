@@ -919,6 +919,10 @@ namespace NotesOblitus
 						return;
 					}
 #endif
+                    var oldSelectedRowIdx = -1;
+                    if (listView.CurrentRow != null)
+                        oldSelectedRowIdx = listView.CurrentRow.Index;
+                    
 					listView.Rows.Clear();
 
 					if (filterTags)
@@ -933,6 +937,15 @@ namespace NotesOblitus
 					}
 
 					// try and select the first note, unless a note is already selected
+
+                    // reselect the old selected row
+                    if (oldSelectedRowIdx >= 0 && listView.RowCount > 0)
+                    {
+                        if (oldSelectedRowIdx >= listView.RowCount)
+                            oldSelectedRowIdx = listView.RowCount - 1;
+                        listView.Rows[oldSelectedRowIdx].Selected = true;
+                    }
+
 					if (SelectedNote == null)
 						SelectedNote = listView.CurrentCell == null
 							? (listView.Rows.Count > 0 ? (Note)listView.Rows[0].Tag : null)
