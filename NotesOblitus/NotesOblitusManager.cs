@@ -1010,8 +1010,8 @@ namespace NotesOblitus
 
 		private static void AddToList(DataGridView view, Note note)
 		{
-			view.Rows.Add(note.FileName, note.Line, note.Tag.ToUpper(), note.Message);
-			view.Rows[view.Rows.Count - 1].Tag = note;
+			var rowIdx = view.Rows.Add(note.FileName, note.Line, note.Tag.ToUpper(), note.Message);
+            view.Rows[rowIdx].Tag = note;
 		}
 
 		private static void AddToTree(Note note, TreeNode currNode, int startPathIndex) /** TODO(note) maybe there could be some colour coding for this */
