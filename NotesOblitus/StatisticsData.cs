@@ -18,7 +18,9 @@ namespace NotesOblitus
 		}
 
 		public void Clear()
-		{
+        {
+            TotalNoteCount = 0;
+            TimeElapsed = 0f;
 			FileStatistics.Clear();
 			DirectoryStatistics.Clear();
 			TagStatistics.Clear();

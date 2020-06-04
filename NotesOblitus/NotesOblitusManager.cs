@@ -768,13 +768,7 @@ namespace NotesOblitus
 					var filepath = fileinfo.FilePath;
 					var filename = filepath.Substring(filepath.IndexOf(startPathName, StringComparison.Ordinal));
 
-					var currstat = new FileStatistic
-					{
-						FileName = filename,
-						CharCount = 0,
-						LineCount = 0,
-						NoteCount = 0
-					};
+                    var currstat = new FileStatistic(filename);
 					_allStatisticsData.FileStatistics.Add(currstat); // add a new statistic
 
 					var text = File.ReadAllText(filepath);
