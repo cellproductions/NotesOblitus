@@ -936,7 +936,13 @@ namespace NotesOblitus
 							AddToList(listView, note);
 					}
 
-					// try and select the first note, unless a note is already selected
+                    // if the view was previously sorted then resort it
+                    if (listView.SortedColumn != null && listView.SortOrder != SortOrder.None)
+                        listView.Sort(listView.SortedColumn,
+                            listView.SortOrder == SortOrder.Ascending ?
+                                ListSortDirection.Ascending :
+                                ListSortDirection.Descending
+                        );
 
                     // reselect the old selected row
                     if (oldSelectedRowIdx >= 0 && listView.RowCount > 0)
@@ -946,6 +952,7 @@ namespace NotesOblitus
                         listView.Rows[oldSelectedRowIdx].Selected = true;
                     }
 
+                    // try and select the first note, unless a note is already selected
 					if (SelectedNote == null)
 						SelectedNote = listView.CurrentCell == null
 							? (listView.Rows.Count > 0 ? (Note)listView.Rows[0].Tag : null)
