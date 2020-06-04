@@ -25,6 +25,12 @@ namespace NotesOblitus
 				_manager.UpdateCurrentView(_manager.CurrentViewMode == ViewMode.ListView ? (Control)dgListNotes : tvListNotes);
 		}
 
+        private void RefreshView()
+        {
+            _manager.ScanAndCollectNotes();
+            UpdateView();
+        }
+
 		private void NotesOblitusApp_VisibleChanged(object sender, EventArgs e)
 		{
 			UpdateView();
@@ -83,8 +89,7 @@ namespace NotesOblitus
 
 		private void miFileRefresh_Click(object sender, EventArgs e)
 		{
-			_manager.ScanAndCollectNotes();
-			UpdateView();
+			RefreshView();
 		}
 
 		private void miFileAutoRefresh_Click(object sender, EventArgs e)
@@ -313,5 +318,11 @@ namespace NotesOblitus
 
 			menu.Show(location);
 		}
+
+        private void NotesOblitusApp_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.F5)
+                RefreshView();
+        }
 	}
 }
