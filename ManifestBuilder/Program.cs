@@ -10,8 +10,13 @@ namespace ManifestBuilder
 	{
 		static void Main(string[] args) // args[0] should be path to files to build manifest from, manifest file will go there as well
 		{
-			Console.WriteLine("Preparing manifest");
-			if (args.Length == 0 || args[0].Trim().Length <= 0)
+            Console.WriteLine("Preparing manifest");
+            if (args.Length == 0)
+            {
+                Console.WriteLine("Usage: ManifestBuilder.exe <Application_Directory>");
+                return;
+            }
+            if (args[0].Trim().Length <= 0)
 			{
 				Console.WriteLine("Invalid manifest path! [path=" + args[0] + ']');
 				return;
@@ -34,7 +39,7 @@ namespace ManifestBuilder
 			sortedentries.Sort(); // keeps files after their respective directories
 			foreach (var entry in sortedentries.Where(entry => !entry.EndsWith(GlobalVars.ManifestFileName)))
 			{
-				var shortpath = entry.Substring(entry.LastIndexOf(startpath, StringComparison.Ordinal) + startpath.Length + 1);
+                var shortpath = entry.Substring(entry.LastIndexOf(startpath, StringComparison.Ordinal) + startpath.Length + 1); /** TODO(bug) if startpath is "NotesOblitus" then the file 'NotesOblitus.exe' will be trimmed down to 'exe' */
 				var isfile = !IsDirectory(entry);
 				manifesttext += (isfile ? "F" : "D");
 				manifesttext += ' ' + shortpath + Environment.NewLine;

@@ -8,6 +8,6 @@ namespace Global
 
 		public const string ApplicationVersion = "1.2.1";
 		public const string PatcherVersion = "1.0.0";
-		public const string ManifestBuilderVersion = "1.0.0";
+		public const string ManifestBuilderVersion = "1.0.1";
 	}
 }
