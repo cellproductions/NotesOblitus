@@ -4,6 +4,8 @@
 # Personal results
 Export/
 notesoblitus.ctdprj
+*.zip
+manifest.dat
 
 # User-specific files
 *.suo
@@ -185,3 +187,4 @@ UpgradeLog*.htm
 
 # Microsoft Fakes
 FakesAssemblies/
+
