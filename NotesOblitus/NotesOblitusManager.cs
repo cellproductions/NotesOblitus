@@ -182,7 +182,7 @@ namespace NotesOblitus
 		public string LoadAndSetupOptions()
 		{
 			CreateDefaultPaths();
-			DefaultProject = JsonConvert.DeserializeObject<DefaultProject>(File.ReadAllText(DefaultPrjFileName));
+			DefaultProject = JsonConvert.DeserializeObject<DefaultProject>(File.ReadAllText(DefaultPrjFileName)); /** TODO(bug) this can crash without useful info. should just load some default settings or something */
 
 			var entryPath = EntryArgs;
 			var openmode = ParseArg(ref entryPath);
@@ -260,31 +260,54 @@ namespace NotesOblitus
 
 				var updater = CreateUpdater(!string.IsNullOrEmpty(DefaultProject.UseProxy) && Boolean.Parse(DefaultProject.UseProxy));
 				Dictionary<string, Version> newversions;
-				var updates = updater.AreUpdatesAvailable(Version.Parse(GlobalVars.ApplicationVersion), out newversions);
+                var updates = updater.AreUpdatesAvailable(Version.Parse(GlobalVars.ApplicationVersion), out newversions);
+                if (Owner.IsDisposed)
+                    return;
 				if (!updates["Application"]) /** TODO(incomplete) if the patcher/manifest needs updating, request a manual download */
 				{
-					if (notify)
-						MessageBox.Show(Owner, @"There are no updates available.", @"Update", MessageBoxButtons.OK, MessageBoxIcon.Information);
-					return;
+                    if (!notify) 
+                        return;
+                    Owner.Invoke((Action) (() =>
+                    {
+                        if (Owner.IsDisposed)
+                            return;
+                        MessageBox.Show(Owner, @"There are no updates available.",
+                            @"Update", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }));
+                    return;
 				}
 
 				if (manualcheck)
-				{
-					if (MessageBox.Show(Owner, @"A new update is available (version " + newversions["Application"] +
-					                           @"). Would you like to update now (this will restart the application)?",
-						@"Update Available", MessageBoxButtons.YesNo, MessageBoxIcon.Information)
-					    != DialogResult.Yes)
+                {
+                    var result = DialogResult.No;
+                    Owner.Invoke((Action)(() =>
+                    {
+                        if (Owner.IsDisposed)
+                            return;
+                        result = MessageBox.Show(Owner,
+                            @"A new update is available (version " + newversions["Application"] +
+                            @"). Would you like to update now (this will restart the application)?",
+                            @"Update Available", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+                    }));
+                    if (result != DialogResult.Yes)
 					{
 						_updateAvailable = true;
 						return;
 					}
 				}
 				else if (update == UpdateStyle.Notify)
-				{
-					if (MessageBox.Show(Owner, @"A new update is available (version " + newversions["Application"] +
-											   @"). Would you like to update now (this will restart the application)?",
-						@"Update Available", MessageBoxButtons.YesNo, MessageBoxIcon.Information)
-						!= DialogResult.Yes)
+                {
+                    var result = DialogResult.No;
+                    Owner.Invoke((Action)(() =>
+                    {
+                        if (Owner.IsDisposed)
+                            return;
+                        result = MessageBox.Show(Owner,
+                            @"A new update is available (version " + newversions["Application"] +
+                            @"). Would you like to update now (this will restart the application)?",
+                            @"Update Available", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+                    }));
+                    if (result != DialogResult.Yes)
 					{
 						_updateAvailable = true;
 						return;
@@ -297,24 +320,21 @@ namespace NotesOblitus
 					process.Kill();
 					for (var i = 0; i < 100 && !process.HasExited; ++i)
 						Thread.Sleep(100);
-				}
+                }
+                if (Owner.IsDisposed)
+                    return;
 				if (Process.GetProcessesByName(patcherFileName).Length > 0)
-				{
-					MessageBox.Show(Owner, @"Please close all instances of " + patcherFileName + @" before trying to update.", @"Update Error", MessageBoxButtons.OK,
-						MessageBoxIcon.Exclamation);
+                {
+                    Owner.Invoke((Action) (() =>
+                    {
+                        if (Owner.IsDisposed)
+                            return;
+                        MessageBox.Show(Owner,
+                            @"Please close all instances of " + patcherFileName + @" before trying to update.",
+                            @"Update Error", MessageBoxButtons.OK,
+                            MessageBoxIcon.Exclamation);
+                    }));
 					return;
-				}
-
-				var temppath = Application.StartupPath + "\\temp";
-				if (!Directory.Exists(temppath))
-					Directory.CreateDirectory(temppath);
-				else
-				{
-					var directory = new DirectoryInfo(temppath);
-					foreach (var file in directory.GetFiles("*", SearchOption.AllDirectories))
-						file.Delete();
-					foreach (var dir in directory.GetDirectories())
-						dir.Delete(true);
 				}
 
 				var progresswindow = new ProgressWindow
@@ -323,25 +343,33 @@ namespace NotesOblitus
 					ProgressStatus = "Downloading files %val/%max"
 				};
 				updater.DownloadsStarted += (sender, args) =>
-				{
-					progresswindow.Show(Owner);
-					progresswindow.StartProgress(args.FileCount);
-					progresswindow.Update();
+                {
+                    if (Owner.IsDisposed)
+                        return;
+                    progresswindow.Show(Owner);
+                    progresswindow.StartProgress(args.FileCount);
+                    progresswindow.Update();
 				};
 				updater.DownloadComplete += (sender, args) =>
-				{
-					progresswindow.IncrementProgress();
+                {
+                    if (Owner.IsDisposed)
+                        return;
+                    progresswindow.IncrementProgress();
 				};
 
-				updater.DownloadUpdate(temppath);
+                var zipname = newversions["Compressed"] + ".zip"; // zip name cheakily stored as a version
+                var zippath = Path.Combine(Application.StartupPath, zipname);
+                updater.DownloadUpdate(zippath);
 
+                if (Owner.IsDisposed)
+                    return;
 				progresswindow.Close();
 
 				Owner.FormClosed += (sender, args) =>
 				{
-					var process = new ProcessStartInfo(Application.StartupPath + '\\' + patcherFileName,
+					var process = new ProcessStartInfo(Path.Combine(Application.StartupPath, patcherFileName),
 						'"' + Application.StartupPath + "\" \"" +
-						temppath + "\" " +
+                        zippath + "\" " +
 						GlobalVars.ApplicationExeName + " \"" +
 						EntryArgs + '"')
 					{
@@ -354,16 +382,16 @@ namespace NotesOblitus
 				ExitApplication(true);
 			}
 			catch (Exception e)
-			{
+            {
+                Logger.Log(e);
 				MessageBox.Show(Owner, @"An exception was encounted while updating!" + Environment.NewLine + e, @"Update Error", MessageBoxButtons.OK,
 						MessageBoxIcon.Exclamation);
-				Logger.Log(e);
 			}
 		}
 
 		private Updater CreateUpdater(bool useProxy) /** TODO(change) this path should be hashed */
 		{
-			return new Updater("https://dl.dropboxusercontent.com/u/28551411/NotesOblitus/", useProxy, !useProxy ? null :
+            return new Updater("https://dl.dropbox.com/s/31ugv68ii69b84j/manifest.dat?dl=0", "https://dl.dropbox.com/s/ws9iye40zhx1jn0/NotesOblitusPackage.zip?dl=0", useProxy, !useProxy ? null :
 					(!string.IsNullOrEmpty(DefaultProject.UseDefaultProxy) && Boolean.Parse(DefaultProject.UseDefaultProxy) ? (WebProxy)WebRequest.DefaultWebProxy :
 					new WebProxy
 					{
@@ -1160,7 +1188,7 @@ namespace NotesOblitus
 			};
 			optionswindow.UpdateClicked += (sender, args) =>
 			{
-				CheckForUpdates(true, true, true);
+				CheckForUpdates(true, true, false); /** TODO(refactor) this can't block. using Invoke on another thread  */
 				args.UpdateFound = _updateAvailable;
 			};
 			optionswindow.Closed += (sender, args) =>

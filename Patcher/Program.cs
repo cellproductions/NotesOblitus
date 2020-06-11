@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -11,7 +12,7 @@ namespace Patcher
 {
 	class Program
 	{
-		static void Main(string[] args) /** TODO(change) some of the substrings arents needed due to Infos having the shortened paths already */
+		static void Main(string[] args)
 		{
 			try
 			{
@@ -26,30 +27,60 @@ namespace Patcher
 					return;
 				}
 
-				var localpath = args[0].Trim(); // the path that ApplicationExeName comes from 
-				var temppath = args[1].Trim(); // the temp path that the downloaded files are stored
-				var tempdirectory = new DirectoryInfo(temppath);
-				foreach (var newpath in tempdirectory.GetDirectories("*", SearchOption.AllDirectories).
-					Select(dirpath => dirpath.FullName.Substring(dirpath.FullName.IndexOf(temppath, StringComparison.Ordinal) + temppath.Length)).
-					Select(shortenedpath => localpath + shortenedpath).
-					Where(newpath => !Directory.Exists(newpath)))
-				{
-					Directory.CreateDirectory(newpath);
-				}
-				foreach (var filepath in tempdirectory.GetFiles("*", SearchOption.AllDirectories))
-				{
-					var shortenedpath = filepath.FullName.Substring(filepath.FullName.IndexOf(temppath, StringComparison.Ordinal) + temppath.Length);
-					var newpath = localpath + shortenedpath;
+				var localpath = Path.GetFullPath(args[0].Trim()); // the path that ApplicationExeName comes from
+				var packagepath = Path.GetFullPath(args[1].Trim()); // the path that the downloaded zip is stored at
 
-					for (var i = 0; i < 100 && IsFileLocked(new FileInfo(newpath)); ++i) // give each file 10 seconds to be unlocked
-						Thread.Sleep(100);
-					File.Copy(filepath.FullName, newpath, true); // if the file is still locked, chances are the user is using it for something, so crash
+                const int sleeptime = 100;
+                for (var i = 0; i < sleeptime && IsFileLocked(new FileInfo(packagepath)); ++i) // give zip file 10 seconds to be unlocked
+                    Thread.Sleep(sleeptime);
 
-					filepath.Delete();
-				}
-				tempdirectory.Delete(true);
+                var excludedpaths = new HashSet<string> {packagepath, Application.ExecutablePath};
+                var tempdir = Path.Combine(localpath, "unpack");
+                CreateBackups(tempdir, localpath, excludedpaths);
+                var startedwrite = false;
 
-				var process = new ProcessStartInfo(args[2], args[3])
+                try
+                {
+                    using (var stream = File.OpenRead(packagepath)) // if the file is still locked, chances are the user is using it for something, so crash
+                    {
+                        var archive = new ZipArchive(stream, ZipArchiveMode.Read);
+                        foreach (var entry in archive.Entries)
+                        {
+                            var writepath = Path.Combine(localpath, entry.FullName);
+                            if (excludedpaths.Contains(writepath))
+                                continue;
+                            if (entry.FullName.EndsWith("\\"))
+                            {
+                                // is empty directory
+                                if (!Directory.Exists(writepath))
+                                    Directory.CreateDirectory(writepath);
+                                continue;
+                            }
+
+                            using (var filestream = File.Open(writepath, FileMode.Create, FileAccess.Write))
+                            {
+                                using (var entrystream = entry.Open())
+                                {
+                                    startedwrite = true;
+                                    entrystream.CopyTo(filestream);
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    if (startedwrite) // restore from backup
+                        CopyDirectory(tempdir, localpath, excludedpaths);
+                    throw;
+                }
+                finally
+                {
+                    File.Delete(packagepath);
+                    RemoveDirectory(tempdir);
+                }
+
+                var process = new ProcessStartInfo(args[2], args[3])
 				{
 					UseShellExecute = true
 				};
@@ -76,7 +107,7 @@ namespace Patcher
 				MessageBox.Show("Invalid \"patch to\" path! [path=" + args[0] + ']', "Patch Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				return false;
 			}
-			if (!Directory.Exists(args[1]))
+			if (!File.Exists(args[1]))
 			{
 				MessageBox.Show("Invalid \"patch from\" path! [path=" + args[1] + ']', "Patch Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				return false;
@@ -104,7 +135,7 @@ namespace Patcher
 
 			try
 			{
-				stream = file.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+				stream = file.Open(FileMode.Open, FileAccess.Read, FileShare.None);
 			}
 			catch (IOException)
 			{
@@ -118,5 +149,28 @@ namespace Patcher
 
 			return false;
 		}
+
+        private static void RemoveDirectory(string path)
+        {
+            if (Directory.Exists(path))
+                Directory.Delete(path, true);
+        }
+
+        private static void CreateBackups(string backupPath, string originalPath, ICollection<string> excludedPaths)
+        {
+            RemoveDirectory(backupPath);
+            Directory.CreateDirectory(backupPath);
+            CopyDirectory(originalPath, backupPath, excludedPaths);
+        }
+
+        private static void CopyDirectory(string fromPath, string toPath, ICollection<string> excludedPaths)
+        {
+            foreach (var filepath in Directory.EnumerateFiles(fromPath))
+                if (!excludedPaths.Contains(filepath)) // dont copy the package file if it is in this folder
+                {
+                    var path = Path.Combine(toPath, filepath.Substring(fromPath.Length + 1)); // + 1 to remove slash
+                    File.Copy(filepath, path, true);
+                }
+        }
 	}
 }
