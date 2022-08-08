@@ -66,7 +66,6 @@ namespace NotesOblitus
 		public DefaultProject DefaultProject { get; set; }
 		public Project CurrentProject { get; internal set; }
 		public Note SelectedNote { get; set; }
-		public bool AutoScan { get; internal set; }
 		public bool IsScanning { get; internal set; }
 		public bool IsUpdatingView { get; internal set; }
 		public string EntryArgs { get; internal set; }
@@ -74,9 +73,9 @@ namespace NotesOblitus
 		private readonly HashSet<string> _tags = new HashSet<string>();
 		private readonly StatisticsData _allStatisticsData = new StatisticsData();
 		private bool _defaultPrjLoaded = true;
-		private readonly object _autoLock = new object();
-		private readonly Timer _autoTimer = new Timer();
-		private Thread _updateThread; // this thread is kept alive on close so it can finish the update
+        private FileSystemWatcher _watcher;
+        public bool _autoScan;
+        private Thread _updateThread; // this thread is kept alive on close so it can finish the update
 		private bool _updateAvailable;
 
 		public NotesOblitusManager(NotesOblitusApp owner, string entryArgs) /** TODO(change) should add default constants for some options, then replace those values */
@@ -84,28 +83,6 @@ namespace NotesOblitus
 			Owner = owner;
 			CurrentViewMode = ViewMode.ListView;
 			EntryArgs = entryArgs;
-			_autoTimer.Elapsed += (sender, args) =>
-			{
-				if (!AutoScan)
-					return;
-				if (string.IsNullOrEmpty(CurrentProject.LastSearchPath))
-					return;
-				if (!Owner.IsDisposed) /** TODO(bug) this doesnt work. still throws exception when Owner has been closed */
-				{
-					Owner.Invoke(new MethodInvoker(() =>
-					{
-						try
-						{
-							ScanAndCollectNotes(false);
-							Owner.UpdateView();
-						}
-						catch (Exception e)
-						{
-							Logger.Log(e);
-						}
-					}));
-				}
-			};
 		}
 
 		private void CreateDefaultPaths()
@@ -221,7 +198,7 @@ namespace NotesOblitus
 				CurrentProject.LastSearchPath = Application.StartupPath;
 
 			Owner.Text = GlobalVars.ApplicationTitle + ' ' + GlobalVars.ApplicationVersion;
-			ResetAutoTimer();
+			ResetAutoWatcher();
 			if (_defaultPrjLoaded) 
 				return CurrentProject.LastSearchPath;
 
@@ -434,10 +411,9 @@ namespace NotesOblitus
 			AddToRecents(DefaultProject.LastProject, ref recentprojects, RecentItemsLimit);
 			DefaultProject.RecentProjects = recentprojects;
 
-			ResetAutoTimer();
+			ResetAutoWatcher();
 
-			if (!AutoScan)
-				ScanAndCollectNotes();
+			ScanAndCollectNotes();
 		}
 
 		public void SaveProject()
@@ -531,32 +507,99 @@ namespace NotesOblitus
 
 		public void SetAutoScan(bool autoScan)
 		{
-			AutoScan = autoScan;
+            /** TODO(incomplete) save this option and default it to true */
+			_autoScan = autoScan;
+            if (_watcher == null)
+            {
+                if (autoScan)
+                    ResetAutoWatcher();
+            }
+            else
+                _watcher.EnableRaisingEvents = autoScan;
 		}
 
-		private void ResetAutoTimer()
-		{
-			if (_autoTimer == null)
-				throw new Exception("_autoTimer");
-			if (CurrentProject == null)
-				throw new Exception("CurrentProject");
-			if (CurrentProject.SearchInterval == null)
-				throw new Exception("SearchInterval");
-			int interval;
-			if (!Int32.TryParse(CurrentProject.SearchInterval, out interval))
-				interval = 10;
-			_autoTimer.Interval = interval * 1000;
+		private void ResetAutoWatcher()
+        {
+            if (CurrentProject == null)
+                throw new Exception("CurrentProject");
+            if (_watcher != null)
+                _watcher.EnableRaisingEvents = false;
 
-			if (!_autoTimer.Enabled)
-				_autoTimer.Start();
+            /** TODO(refactor) remove search depth as an option. its useless. search subdirectories by default */
+            int searchDepth;
+            if (!int.TryParse(CurrentProject.SearchDepth, out searchDepth))
+                searchDepth = 1; // fallback to searching sub directories
+
+            FileSystemEventHandler watcherFileCallback = (sender, args) =>
+            {
+                if (Owner.IsDisposed)
+                    return;
+                
+                var attributes = File.GetAttributes(args.FullPath);
+                if ((attributes & FileAttributes.Directory) == FileAttributes.Directory)
+                {
+                    if (!IsPathFiltered(args.FullPath))
+                    {
+                        /** TODO(refactor) 
+                         * if created, add all notes from that path
+                         * if deleted, remove all notes from that path
+                         * if renamed, update all notes from that path 
+                         * 
+                         * keep scan depth and sub path filters in mind
+                         */
+                        ScanAndCollectNotes(false);
+                        Owner.UpdateView();
+                    }
+                }
+                else if ((attributes & FileAttributes.Offline) != FileAttributes.Offline)
+                {
+                    if (!IsFileFiltered(args.FullPath, CurrentProject.FileTypes))
+                    {
+                        /** TODO(refactor) 
+                         * if created, add all notes from that path
+                         * if deleted, remove all notes from that path
+                         * if renamed, update all notes from that path 
+                         */
+                        ScanAndCollectNotes(false);
+                        Owner.UpdateView();
+                    }
+                }
+            };
+
+            RenamedEventHandler watcherRenamedCallback = (sender, args) =>
+            {
+                if (Owner.IsDisposed)
+                    return;
+
+                /** TODO(refactor) this could be much better:
+                 * 1. if the old path is filtered and the new path isn't then update just for that path 
+                 * 2. if the new path is filtered and the old path isn't then remove the old path notes
+                 * 3. if both are filtered then do nothing
+                 * 4. if neither are filtered then replace old note paths with new path (inc. sub directories)
+                 * 
+                 * keep scan depth and sub path filters in mind
+                 */
+                ScanAndCollectNotes(false);
+                Owner.UpdateView();
+            };
+
+            /** TODO(refactor) the watcher should be on its own thread and queue paths for scanning instead */
+            _watcher = new FileSystemWatcher(CurrentProject.LastSearchPath)
+            {
+                IncludeSubdirectories = searchDepth > 0,
+                SynchronizingObject = Owner,
+                EnableRaisingEvents = _autoScan
+            };
+
+            _watcher.Changed += watcherFileCallback;
+            _watcher.Created += watcherFileCallback;
+            _watcher.Deleted += watcherFileCallback;
+            _watcher.Renamed += watcherRenamedCallback;
 		}
 
 		public void ExportProject(string filePath, IObjectExporter exporter)
 		{
-			lock (_autoLock)
-			{
-				exporter.ExportObject(filePath, _notes);
-			}
+			exporter.ExportObject(filePath, _notes);
 		}
 
 		public void UpdateRecentProjects(ToolStripMenuItem projectsView, string[] recentProjects)
@@ -631,9 +674,7 @@ namespace NotesOblitus
 
 		public void ExitApplication(bool save)
 		{
-			AutoScan = false;
-			if (_autoTimer.Enabled)
-				_autoTimer.Stop();
+            SetAutoScan(false);
 
 			if (save)
 				WriteProject(SaveMode.DefaultOnly);
@@ -695,7 +736,7 @@ namespace NotesOblitus
 				var fileInfos = fileEnumerable as FileInfo[] ?? fileEnumerable.ToArray();
 				dirStatistic.FileCount = fileInfos.Length; /** TODO(note) should this be the number of files with notes in them or the total number of files? */
 
-				searchfiles.AddRange(fileInfos);
+                searchfiles.AddRange(fileInfos);
 			}
 
 			return searchfiles;
@@ -720,56 +761,53 @@ namespace NotesOblitus
 
 		public void ScanAndCollectNotes(bool showProgress = true)
 		{
-			lock (_autoLock)
+			if (IsScanning)
+				return;
+			IsScanning = true;
+
+			_notes.Clear();
+			_tags.Clear();
+			_allStatisticsData.Clear();
+
+			if (string.IsNullOrEmpty(CurrentProject.LastSearchPath))
+				return;
+
+			var recentsearches = DefaultProject.RecentSearchPaths;
+			AddToRecents(CurrentProject.LastSearchPath, ref recentsearches, RecentItemsLimit);
+			DefaultProject.RecentSearchPaths = recentsearches;
+
+			ProgressWindow progresswindow = null;
+			if (showProgress)
 			{
-				if (IsScanning)
-					return;
-				IsScanning = true;
-
-				_notes.Clear();
-				_tags.Clear();
-				_allStatisticsData.Clear();
-
-				if (string.IsNullOrEmpty(CurrentProject.LastSearchPath))
-					return;
-
-				var recentsearches = DefaultProject.RecentSearchPaths;
-				AddToRecents(CurrentProject.LastSearchPath, ref recentsearches, RecentItemsLimit);
-				DefaultProject.RecentSearchPaths = recentsearches;
-
-				ProgressWindow progresswindow = null;
-				if (showProgress)
+				progresswindow = new ProgressWindow
 				{
-					progresswindow = new ProgressWindow
-					{
-						Text = @"Reading Files",
-						InitialStatus = @"Scanning...",
-						ProgressStatus = @"Reading %val/%max files..."
-					};
-					progresswindow.Show(Owner);
-					progresswindow.Update();
-				}
-
-				var timer = Stopwatch.StartNew();
-				var startpathname = GetFolderName(CurrentProject.LastSearchPath);
-				var files = GetScannableFilePaths(startpathname);
-				if (showProgress)
-					progresswindow.StartProgress(files.Count);
-				
-				var regex = new Regex("(^\\s*$)|(" + Regex.Escape(CurrentProject.NoteOpen) + "((.|\n)*?)" + Regex.Escape(CurrentProject.NoteClose) + ')',
-									RegexOptions.Multiline); // finds empty lines as well as notes
-
-				CollectNotesAndStats(progresswindow, files, regex, startpathname);
-				timer.Stop();
-				if (showProgress)
-				{
-					progresswindow.IncrementProgress();
-					progresswindow.Close();
-				}
-				_allStatisticsData.TimeElapsed = (timer.ElapsedMilliseconds / 1000.0f);
-
-				IsScanning = false;
+					Text = @"Reading Files",
+					InitialStatus = @"Scanning...",
+					ProgressStatus = @"Reading %val/%max files..."
+				};
+				progresswindow.Show(Owner);
+				progresswindow.Update();
 			}
+
+			var timer = Stopwatch.StartNew();
+			var startpathname = GetFolderName(CurrentProject.LastSearchPath);
+			var files = GetScannableFilePaths(startpathname);
+			if (showProgress)
+				progresswindow.StartProgress(files.Count);
+				
+			var regex = new Regex("(^\\s*$)|(" + Regex.Escape(CurrentProject.NoteOpen) + "((.|\n)*?)" + Regex.Escape(CurrentProject.NoteClose) + ')',
+								RegexOptions.Multiline); // finds empty lines as well as notes
+
+			CollectNotesAndStats(progresswindow, files, regex, startpathname);
+			timer.Stop();
+			if (showProgress)
+			{
+				progresswindow.IncrementProgress();
+				progresswindow.Close();
+			}
+			_allStatisticsData.TimeElapsed = (timer.ElapsedMilliseconds / 1000.0f);
+
+			IsScanning = false;
 		}
 
 		public static string GetFolderName(string path)
@@ -926,103 +964,100 @@ namespace NotesOblitus
 			var filterTags = Boolean.Parse(CurrentProject.FilterTags);
 			if (CurrentProject.TagFilter == null)
 				filterTags = false;
-
-			lock (_autoLock)
+            
+			if (CurrentViewMode == ViewMode.ListView)
 			{
-				if (CurrentViewMode == ViewMode.ListView)
-				{
-					var listView = currentViewControl as DataGridView;
+				var listView = currentViewControl as DataGridView;
 #if DEBUG
-					Debug.Assert(listView != null);
+				Debug.Assert(listView != null);
 #else
-					if (listView == null)
-					{
-						IsUpdatingView = false;
-						return;
-					}
+				if (listView == null)
+				{
+					IsUpdatingView = false;
+					return;
+				}
 #endif
-                    var oldSelectedRowIdx = -1;
-                    if (listView.CurrentRow != null)
-                        oldSelectedRowIdx = listView.CurrentRow.Index;
+                var oldSelectedRowIdx = -1;
+                if (listView.CurrentRow != null)
+                    oldSelectedRowIdx = listView.CurrentRow.Index;
                     
-					listView.Rows.Clear();
+				listView.Rows.Clear();
 
-					if (filterTags)
-					{
-						foreach (var note in _notes.Where(note => !CurrentProject.TagFilter.Contains(note.Tag)))
-							AddToList(listView, note);
-					}
-					else
-					{
-						foreach (var note in _notes)
-							AddToList(listView, note);
-					}
-
-                    // if the view was previously sorted then resort it
-                    if (listView.SortedColumn != null && listView.SortOrder != SortOrder.None)
-                        listView.Sort(listView.SortedColumn,
-                            listView.SortOrder == SortOrder.Ascending ?
-                                ListSortDirection.Ascending :
-                                ListSortDirection.Descending
-                        );
-
-                    // reselect the old selected row
-                    if (oldSelectedRowIdx >= 0 && listView.RowCount > 0)
-                    {
-                        if (oldSelectedRowIdx >= listView.RowCount)
-                            oldSelectedRowIdx = listView.RowCount - 1;
-                        listView.Rows[oldSelectedRowIdx].Selected = true;
-                    }
-
-                    // try and select the first note, unless a note is already selected
-					if (SelectedNote == null)
-						SelectedNote = listView.CurrentCell == null
-							? (listView.Rows.Count > 0 ? (Note)listView.Rows[0].Tag : null)
-							: (Note)listView.CurrentCell.OwningRow.Tag;
+				if (filterTags)
+				{
+					foreach (var note in _notes.Where(note => !CurrentProject.TagFilter.Contains(note.Tag)))
+						AddToList(listView, note);
 				}
 				else
 				{
-					var treeView = currentViewControl as TreeView;
+					foreach (var note in _notes)
+						AddToList(listView, note);
+				}
+
+                // if the view was previously sorted then resort it
+                if (listView.SortedColumn != null && listView.SortOrder != SortOrder.None)
+                    listView.Sort(listView.SortedColumn,
+                        listView.SortOrder == SortOrder.Ascending ?
+                            ListSortDirection.Ascending :
+                            ListSortDirection.Descending
+                    );
+
+                // reselect the old selected row
+                if (oldSelectedRowIdx >= 0 && listView.RowCount > 0)
+                {
+                    if (oldSelectedRowIdx >= listView.RowCount)
+                        oldSelectedRowIdx = listView.RowCount - 1;
+                    listView.Rows[oldSelectedRowIdx].Selected = true;
+                }
+
+                // try and select the first note, unless a note is already selected
+				if (SelectedNote == null)
+					SelectedNote = listView.CurrentCell == null
+						? (listView.Rows.Count > 0 ? (Note)listView.Rows[0].Tag : null)
+						: (Note)listView.CurrentCell.OwningRow.Tag;
+			}
+			else
+			{
+				var treeView = currentViewControl as TreeView;
 #if DEBUG
-					Debug.Assert(treeView != null);
+				Debug.Assert(treeView != null);
 #else
-					if (treeView == null)
-					{
-						IsUpdatingView = false;
-						return;
-					}
+				if (treeView == null)
+				{
+					IsUpdatingView = false;
+					return;
+				}
 #endif
-					var startindex = CurrentProject.LastSearchPath.Length + 1; // + 1 to skip the last backslash
-					treeView.Nodes.Clear();
-					treeView.Nodes.Add(GetFolderName(CurrentProject.LastSearchPath));
-					var curr = treeView.Nodes[0];
-					curr.ToolTipText = @"Found: " + _notes.Count;
+				var startindex = CurrentProject.LastSearchPath.Length + 1; // + 1 to skip the last backslash
+				treeView.Nodes.Clear();
+				treeView.Nodes.Add(GetFolderName(CurrentProject.LastSearchPath));
+				var curr = treeView.Nodes[0];
+				curr.ToolTipText = @"Found: " + _notes.Count;
 
-					if (filterTags)
-					{
-						foreach (var note in _notes.Where(note => !CurrentProject.TagFilter.Contains(note.Tag)))
-							AddToTree(note, curr, startindex);
-					}
-					else
-					{
-						foreach (var note in _notes)
-							AddToTree(note, curr, startindex);
-					}
+				if (filterTags)
+				{
+					foreach (var note in _notes.Where(note => !CurrentProject.TagFilter.Contains(note.Tag)))
+						AddToTree(note, curr, startindex);
+				}
+				else
+				{
+					foreach (var note in _notes)
+						AddToTree(note, curr, startindex);
+				}
 
-					treeView.ExpandAll();
+				treeView.ExpandAll();
 
-					// try and select the first note, unless a note is already selected
-					if (SelectedNote == null)
+				// try and select the first note, unless a note is already selected
+				if (SelectedNote == null)
+				{
+					if (treeView.SelectedNode != null)
+						SelectedNote = (Note)treeView.SelectedNode.Tag;
+					else if (treeView.Nodes[0].Nodes.Count > 0)
 					{
-						if (treeView.SelectedNode != null)
-							SelectedNote = (Note)treeView.SelectedNode.Tag;
-						else if (treeView.Nodes[0].Nodes.Count > 0)
-						{
-							var currnode = treeView.Nodes[0].Nodes[0];
-							while (currnode.Nodes.Count > 0)
-								currnode = currnode.Nodes[0];
-							SelectedNote = (Note)currnode.Tag;
-						}
+						var currnode = treeView.Nodes[0].Nodes[0];
+						while (currnode.Nodes.Count > 0)
+							currnode = currnode.Nodes[0];
+						SelectedNote = (Note)currnode.Tag;
 					}
 				}
 			}
@@ -1131,25 +1166,21 @@ namespace NotesOblitus
 				filetext = filetext.Replace(SelectedNote.All, ""); // the file may have changed before delete, so instead of removing by index, replace
 				File.WriteAllText(SelectedNote.FilePath, filetext);
 			}
-
-
-			lock (_autoLock)
+            
+			if (CurrentViewMode == ViewMode.ListView)
 			{
-				if (CurrentViewMode == ViewMode.ListView)
-				{
-					var listView = (DataGridView) currentView;
-					_notes.RemoveAt(listView.CurrentCell.RowIndex);
-					listView.Rows.RemoveAt(listView.CurrentCell.RowIndex);
-				}
+				var listView = (DataGridView) currentView;
+				_notes.RemoveAt(listView.CurrentCell.RowIndex);
+				listView.Rows.RemoveAt(listView.CurrentCell.RowIndex);
+			}
+			else
+			{
+				var treeView = (TreeView) currentView;
+				_notes.Remove(SelectedNote);
+				if (treeView.SelectedNode.Parent != null)
+					treeView.SelectedNode.Parent.Nodes.Remove(treeView.SelectedNode);
 				else
-				{
-					var treeView = (TreeView) currentView;
-					_notes.Remove(SelectedNote);
-					if (treeView.SelectedNode.Parent != null)
-						treeView.SelectedNode.Parent.Nodes.Remove(treeView.SelectedNode);
-					else
-						treeView.Nodes.Remove(treeView.SelectedNode);
-				}
+					treeView.Nodes.Remove(treeView.SelectedNode);
 			}
 			SelectedNote = null;
 		}
@@ -1203,7 +1234,7 @@ namespace NotesOblitus
 				CurrentProject.LastSearchPath = lastsearchpath;
 				if (CurrentProject == DefaultProject)
 					DefaultProject.LastProject = lastproject;
-				ResetAutoTimer();
+				ResetAutoWatcher();
 			};
 			optionswindow.Show(Owner);
 		}

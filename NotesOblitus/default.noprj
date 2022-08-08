@@ -15,7 +15,6 @@
 	"DeleteFromSource": "False",
 	"SearchDepth": "2",
 	"LastSearchPath": "",
-	"SearchInterval": "10",
 	"PreviewLineCount": "20",
 	"NoteOpen": "/** TODO",
 	"NoteClose": "*/",

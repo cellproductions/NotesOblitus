@@ -15,10 +15,6 @@
 		/// </summary>
 		public string LastSearchPath { get; set; }
 		/// <summary>
-		/// How many seconds between each auto search.
-		/// </summary>
-		public string SearchInterval { get; set; }
-		/// <summary>
 		/// How many lines the preview dialog displays (or tries to).
 		/// </summary>
 		public string PreviewLineCount { get; set; }

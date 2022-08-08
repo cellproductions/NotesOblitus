@@ -47,7 +47,6 @@ namespace NotesOblitus
 			tbGeneralStart.Text = GetStringFromOption(defaultOptions, project, "NoteOpen");
 			tbGeneralEnd.Text = GetStringFromOption(defaultOptions, project, "NoteClose");
 			nGeneralDepth.Value = GetDecimalFromOption(defaultOptions, project, "SearchDepth", 2);
-			nGeneralInterval.Value = GetDecimalFromOption(defaultOptions, project, "SearchInterval", 10);
 			cbGeneralUpdate.SelectedIndex = ValidOption(project.UpdateMode)
 				? (int)UpdateStyle.None.Parse(project.UpdateMode)
 				: (ValidOption(defaultOptions.UpdateMode) ? (int)UpdateStyle.None.Parse(defaultOptions.UpdateMode) : (int)UpdateStyle.None);
@@ -134,7 +133,6 @@ namespace NotesOblitus
 				NoteOpen = tbGeneralStart.Text.Trim(),
 				NoteClose = tbGeneralEnd.Text.Trim(),
 				SearchDepth = nGeneralDepth.Value.ToString(CultureInfo.InvariantCulture),
-				SearchInterval = nGeneralInterval.Value.ToString(CultureInfo.InvariantCulture),
 				UpdateMode = UpdateStyleExtensions.FromInt(cbGeneralUpdate.SelectedIndex).ToString(),
 
 				// preview

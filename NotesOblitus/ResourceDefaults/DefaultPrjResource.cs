@@ -22,7 +22,6 @@
 				"\t\"DeleteFromSource\": \"False\",\n" +
 				"\t\"SearchDepth\": \"2\",\n" +
 				"\t\"LastSearchPath\": \"\",\n" +
-				"\t\"SearchInterval\": \"10\",\n" +
 				"\t\"PreviewLineCount\": \"20\",\n" +
 				"\t\"NoteOpen\": \"/** TODO\",\n" +
 				"\t\"NoteClose\": \"*/\",\n" +

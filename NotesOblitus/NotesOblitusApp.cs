@@ -80,9 +80,7 @@ namespace NotesOblitus
 			var lastsearchpath = _manager.ChooseScanDirectory();
 			if (lastsearchpath != null)
 				tbInitialPath.Text = lastsearchpath;
-
-			if (_manager.AutoScan) 
-				return;
+            
 			_manager.ScanAndCollectNotes();
 			UpdateView();
 		}
@@ -200,12 +198,9 @@ namespace NotesOblitus
 		{
 			if (e.KeyCode != Keys.Enter)
 				return;
-
-			if (!_manager.AutoScan)
-			{
-				_manager.ScanAndCollectNotes();
-				UpdateView();
-			}
+            
+			_manager.ScanAndCollectNotes();
+			UpdateView();
 
 			e.Handled = true;
 			e.SuppressKeyPress = true;

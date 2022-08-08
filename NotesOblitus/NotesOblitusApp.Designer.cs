@@ -34,7 +34,22 @@ namespace NotesOblitus
 		{
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(NotesOblitusApp));
-            this.msMainMenu = new System.Windows.Forms.MenuStrip();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.tbInitialPath = new NotesOblitus.Controls.TextBoxPlaceHolder();
+            this.htcMainView = new NotesOblitus.Controls.HiddenTabControl();
+            this.tpTable = new System.Windows.Forms.TabPage();
+            this.dgListNotes = new System.Windows.Forms.DataGridView();
+            this.cFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.cLine = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.cTag = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.cMessage = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.tpTree = new System.Windows.Forms.TabPage();
+            this.tvListNotes = new System.Windows.Forms.TreeView();
+            this.niMainNotify = new System.Windows.Forms.NotifyIcon(this.components);
+            this.msNotifyMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.miNotifyAuto = new System.Windows.Forms.ToolStripMenuItem();
+            this.miNotifyAbout = new System.Windows.Forms.ToolStripMenuItem();
+            this.miNotifyExit = new System.Windows.Forms.ToolStripMenuItem();
             this.miFile = new System.Windows.Forms.ToolStripMenuItem();
             this.miFileOpen = new System.Windows.Forms.ToolStripMenuItem();
             this.miFileSave = new System.Windows.Forms.ToolStripMenuItem();
@@ -65,43 +80,178 @@ namespace NotesOblitus
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.miAboutHelp = new System.Windows.Forms.ToolStripMenuItem();
             this.miAboutAbout = new System.Windows.Forms.ToolStripMenuItem();
-            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.niMainNotify = new System.Windows.Forms.NotifyIcon(this.components);
-            this.msNotifyMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.miNotifyAuto = new System.Windows.Forms.ToolStripMenuItem();
-            this.miNotifyAbout = new System.Windows.Forms.ToolStripMenuItem();
-            this.miNotifyExit = new System.Windows.Forms.ToolStripMenuItem();
-            this.tbInitialPath = new NotesOblitus.Controls.TextBoxPlaceHolder();
-            this.htcMainView = new NotesOblitus.Controls.HiddenTabControl();
-            this.tpTable = new System.Windows.Forms.TabPage();
-            this.dgListNotes = new System.Windows.Forms.DataGridView();
-            this.cFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.cLine = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.cTag = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.cMessage = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.tpTree = new System.Windows.Forms.TabPage();
-            this.tvListNotes = new System.Windows.Forms.TreeView();
-            this.msMainMenu.SuspendLayout();
+            this.msMainMenu = new System.Windows.Forms.MenuStrip();
             this.tableLayoutPanel1.SuspendLayout();
-            this.msNotifyMenu.SuspendLayout();
             this.htcMainView.SuspendLayout();
             this.tpTable.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgListNotes)).BeginInit();
             this.tpTree.SuspendLayout();
+            this.msNotifyMenu.SuspendLayout();
+            this.msMainMenu.SuspendLayout();
             this.SuspendLayout();
             // 
-            // msMainMenu
+            // tableLayoutPanel1
             // 
-            this.msMainMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.miFile,
-            this.viewToolStripMenuItem,
-            this.editToolStripMenuItem,
-            this.aboutToolStripMenuItem});
-            this.msMainMenu.Location = new System.Drawing.Point(0, 0);
-            this.msMainMenu.Name = "msMainMenu";
-            this.msMainMenu.Size = new System.Drawing.Size(784, 24);
-            this.msMainMenu.TabIndex = 0;
-            this.msMainMenu.Text = "menuStrip1";
+            this.tableLayoutPanel1.ColumnCount = 1;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.Controls.Add(this.tbInitialPath, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.htcMainView, 0, 1);
+            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 24);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 2;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(784, 538);
+            this.tableLayoutPanel1.TabIndex = 1;
+            // 
+            // tbInitialPath
+            // 
+            this.tbInitialPath.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tbInitialPath.Location = new System.Drawing.Point(3, 3);
+            this.tbInitialPath.Name = "tbInitialPath";
+            this.tbInitialPath.PlaceHolder = "Project search path";
+            this.tbInitialPath.Size = new System.Drawing.Size(778, 20);
+            this.tbInitialPath.TabIndex = 0;
+            this.tbInitialPath.TextChanged += new System.EventHandler(this.tbInitialPath_TextChanged);
+            this.tbInitialPath.KeyDown += new System.Windows.Forms.KeyEventHandler(this.tbInitialPath_KeyDown);
+            this.tbInitialPath.KeyUp += new System.Windows.Forms.KeyEventHandler(this.tbInitialPath_KeyUp);
+            // 
+            // htcMainView
+            // 
+            this.htcMainView.Controls.Add(this.tpTable);
+            this.htcMainView.Controls.Add(this.tpTree);
+            this.htcMainView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.htcMainView.Location = new System.Drawing.Point(3, 28);
+            this.htcMainView.Name = "htcMainView";
+            this.htcMainView.SelectedIndex = 0;
+            this.htcMainView.Size = new System.Drawing.Size(778, 507);
+            this.htcMainView.TabIndex = 1;
+            this.htcMainView.SelectedIndexChanged += new System.EventHandler(this.htcMainView_SelectedIndexChanged);
+            // 
+            // tpTable
+            // 
+            this.tpTable.Controls.Add(this.dgListNotes);
+            this.tpTable.Location = new System.Drawing.Point(4, 22);
+            this.tpTable.Name = "tpTable";
+            this.tpTable.Size = new System.Drawing.Size(770, 481);
+            this.tpTable.TabIndex = 0;
+            this.tpTable.Text = "tpTable";
+            this.tpTable.UseVisualStyleBackColor = true;
+            // 
+            // dgListNotes
+            // 
+            this.dgListNotes.AllowUserToAddRows = false;
+            this.dgListNotes.AllowUserToDeleteRows = false;
+            this.dgListNotes.AllowUserToResizeRows = false;
+            this.dgListNotes.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.dgListNotes.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
+            this.dgListNotes.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            this.dgListNotes.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.cFile,
+            this.cLine,
+            this.cTag,
+            this.cMessage});
+            this.dgListNotes.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgListNotes.Location = new System.Drawing.Point(0, 0);
+            this.dgListNotes.MultiSelect = false;
+            this.dgListNotes.Name = "dgListNotes";
+            this.dgListNotes.ReadOnly = true;
+            this.dgListNotes.RowHeadersVisible = false;
+            this.dgListNotes.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
+            this.dgListNotes.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dgListNotes.Size = new System.Drawing.Size(770, 481);
+            this.dgListNotes.TabIndex = 0;
+            this.dgListNotes.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgListNotes_CellDoubleClick);
+            this.dgListNotes.CellMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dgListNotes_CellMouseClick);
+            this.dgListNotes.SelectionChanged += new System.EventHandler(this.dgListNotes_SelectionChanged);
+            // 
+            // cFile
+            // 
+            this.cFile.HeaderText = "File:";
+            this.cFile.Name = "cFile";
+            this.cFile.ReadOnly = true;
+            // 
+            // cLine
+            // 
+            this.cLine.FillWeight = 20F;
+            this.cLine.HeaderText = "Line:";
+            this.cLine.Name = "cLine";
+            this.cLine.ReadOnly = true;
+            // 
+            // cTag
+            // 
+            this.cTag.FillWeight = 50F;
+            this.cTag.HeaderText = "Tag:";
+            this.cTag.Name = "cTag";
+            this.cTag.ReadOnly = true;
+            // 
+            // cMessage
+            // 
+            this.cMessage.HeaderText = "Message:";
+            this.cMessage.Name = "cMessage";
+            this.cMessage.ReadOnly = true;
+            // 
+            // tpTree
+            // 
+            this.tpTree.Controls.Add(this.tvListNotes);
+            this.tpTree.Location = new System.Drawing.Point(4, 22);
+            this.tpTree.Name = "tpTree";
+            this.tpTree.Size = new System.Drawing.Size(770, 481);
+            this.tpTree.TabIndex = 1;
+            this.tpTree.Text = "tpTree";
+            this.tpTree.UseVisualStyleBackColor = true;
+            // 
+            // tvListNotes
+            // 
+            this.tvListNotes.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tvListNotes.Location = new System.Drawing.Point(0, 0);
+            this.tvListNotes.Name = "tvListNotes";
+            this.tvListNotes.ShowNodeToolTips = true;
+            this.tvListNotes.Size = new System.Drawing.Size(770, 481);
+            this.tvListNotes.TabIndex = 0;
+            this.tvListNotes.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.tvListNotes_AfterSelect);
+            this.tvListNotes.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.tvListNotes_NodeMouseClick);
+            this.tvListNotes.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.tvListNotes_NodeMouseDoubleClick);
+            // 
+            // niMainNotify
+            // 
+            this.niMainNotify.ContextMenuStrip = this.msNotifyMenu;
+            this.niMainNotify.Icon = ((System.Drawing.Icon)(resources.GetObject("niMainNotify.Icon")));
+            this.niMainNotify.Text = "niMainIcon";
+            this.niMainNotify.Visible = true;
+            // 
+            // msNotifyMenu
+            // 
+            this.msNotifyMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.miNotifyAuto,
+            this.miNotifyAbout,
+            this.miNotifyExit});
+            this.msNotifyMenu.Name = "msNotifyMenu";
+            this.msNotifyMenu.Size = new System.Drawing.Size(143, 70);
+            this.msNotifyMenu.Opening += new System.ComponentModel.CancelEventHandler(this.msNotifyMenu_Opening);
+            // 
+            // miNotifyAuto
+            // 
+            this.miNotifyAuto.CheckOnClick = true;
+            this.miNotifyAuto.Name = "miNotifyAuto";
+            this.miNotifyAuto.Size = new System.Drawing.Size(142, 22);
+            this.miNotifyAuto.Text = "Auto Refresh";
+            this.miNotifyAuto.Click += new System.EventHandler(this.miNotifyAuto_Click);
+            // 
+            // miNotifyAbout
+            // 
+            this.miNotifyAbout.Name = "miNotifyAbout";
+            this.miNotifyAbout.Size = new System.Drawing.Size(142, 22);
+            this.miNotifyAbout.Text = "About";
+            this.miNotifyAbout.Click += new System.EventHandler(this.miNotifyAbout_Click);
+            // 
+            // miNotifyExit
+            // 
+            this.miNotifyExit.Name = "miNotifyExit";
+            this.miNotifyExit.Size = new System.Drawing.Size(142, 22);
+            this.miNotifyExit.Text = "Exit";
+            this.miNotifyExit.Click += new System.EventHandler(this.miNotifyExit_Click);
             // 
             // miFile
             // 
@@ -343,168 +493,18 @@ namespace NotesOblitus
             this.miAboutAbout.Text = "About";
             this.miAboutAbout.Click += new System.EventHandler(this.miAboutAbout_Click);
             // 
-            // tableLayoutPanel1
+            // msMainMenu
             // 
-            this.tableLayoutPanel1.ColumnCount = 1;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Controls.Add(this.tbInitialPath, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.htcMainView, 0, 1);
-            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 24);
-            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 2;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(784, 538);
-            this.tableLayoutPanel1.TabIndex = 1;
-            // 
-            // niMainNotify
-            // 
-            this.niMainNotify.ContextMenuStrip = this.msNotifyMenu;
-            this.niMainNotify.Icon = ((System.Drawing.Icon)(resources.GetObject("niMainNotify.Icon")));
-            this.niMainNotify.Text = "niMainIcon";
-            this.niMainNotify.Visible = true;
-            // 
-            // msNotifyMenu
-            // 
-            this.msNotifyMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.miNotifyAuto,
-            this.miNotifyAbout,
-            this.miNotifyExit});
-            this.msNotifyMenu.Name = "msNotifyMenu";
-            this.msNotifyMenu.Size = new System.Drawing.Size(143, 70);
-            this.msNotifyMenu.Opening += new System.ComponentModel.CancelEventHandler(this.msNotifyMenu_Opening);
-            // 
-            // miNotifyAuto
-            // 
-            this.miNotifyAuto.CheckOnClick = true;
-            this.miNotifyAuto.Name = "miNotifyAuto";
-            this.miNotifyAuto.Size = new System.Drawing.Size(142, 22);
-            this.miNotifyAuto.Text = "Auto Refresh";
-            this.miNotifyAuto.Click += new System.EventHandler(this.miNotifyAuto_Click);
-            // 
-            // miNotifyAbout
-            // 
-            this.miNotifyAbout.Name = "miNotifyAbout";
-            this.miNotifyAbout.Size = new System.Drawing.Size(142, 22);
-            this.miNotifyAbout.Text = "About";
-            this.miNotifyAbout.Click += new System.EventHandler(this.miNotifyAbout_Click);
-            // 
-            // miNotifyExit
-            // 
-            this.miNotifyExit.Name = "miNotifyExit";
-            this.miNotifyExit.Size = new System.Drawing.Size(142, 22);
-            this.miNotifyExit.Text = "Exit";
-            this.miNotifyExit.Click += new System.EventHandler(this.miNotifyExit_Click);
-            // 
-            // tbInitialPath
-            // 
-            this.tbInitialPath.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbInitialPath.Location = new System.Drawing.Point(3, 3);
-            this.tbInitialPath.Name = "tbInitialPath";
-            this.tbInitialPath.PlaceHolder = "Project search path";
-            this.tbInitialPath.Size = new System.Drawing.Size(778, 20);
-            this.tbInitialPath.TabIndex = 0;
-            this.tbInitialPath.TextChanged += new System.EventHandler(this.tbInitialPath_TextChanged);
-            this.tbInitialPath.KeyDown += new System.Windows.Forms.KeyEventHandler(this.tbInitialPath_KeyDown);
-            this.tbInitialPath.KeyUp += new System.Windows.Forms.KeyEventHandler(this.tbInitialPath_KeyUp);
-            // 
-            // htcMainView
-            // 
-            this.htcMainView.Controls.Add(this.tpTable);
-            this.htcMainView.Controls.Add(this.tpTree);
-            this.htcMainView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.htcMainView.Location = new System.Drawing.Point(3, 28);
-            this.htcMainView.Name = "htcMainView";
-            this.htcMainView.SelectedIndex = 0;
-            this.htcMainView.Size = new System.Drawing.Size(778, 507);
-            this.htcMainView.TabIndex = 1;
-            this.htcMainView.SelectedIndexChanged += new System.EventHandler(this.htcMainView_SelectedIndexChanged);
-            // 
-            // tpTable
-            // 
-            this.tpTable.Controls.Add(this.dgListNotes);
-            this.tpTable.Location = new System.Drawing.Point(4, 22);
-            this.tpTable.Name = "tpTable";
-            this.tpTable.Size = new System.Drawing.Size(770, 481);
-            this.tpTable.TabIndex = 0;
-            this.tpTable.Text = "tpTable";
-            this.tpTable.UseVisualStyleBackColor = true;
-            // 
-            // dgListNotes
-            // 
-            this.dgListNotes.AllowUserToAddRows = false;
-            this.dgListNotes.AllowUserToDeleteRows = false;
-            this.dgListNotes.AllowUserToResizeRows = false;
-            this.dgListNotes.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dgListNotes.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
-            this.dgListNotes.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            this.dgListNotes.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.cFile,
-            this.cLine,
-            this.cTag,
-            this.cMessage});
-            this.dgListNotes.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgListNotes.Location = new System.Drawing.Point(0, 0);
-            this.dgListNotes.MultiSelect = false;
-            this.dgListNotes.Name = "dgListNotes";
-            this.dgListNotes.ReadOnly = true;
-            this.dgListNotes.RowHeadersVisible = false;
-            this.dgListNotes.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
-            this.dgListNotes.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgListNotes.Size = new System.Drawing.Size(770, 481);
-            this.dgListNotes.TabIndex = 0;
-            this.dgListNotes.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgListNotes_CellDoubleClick);
-            this.dgListNotes.CellMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dgListNotes_CellMouseClick);
-            this.dgListNotes.SelectionChanged += new System.EventHandler(this.dgListNotes_SelectionChanged);
-            // 
-            // cFile
-            // 
-            this.cFile.HeaderText = "File:";
-            this.cFile.Name = "cFile";
-            this.cFile.ReadOnly = true;
-            // 
-            // cLine
-            // 
-            this.cLine.FillWeight = 20F;
-            this.cLine.HeaderText = "Line:";
-            this.cLine.Name = "cLine";
-            this.cLine.ReadOnly = true;
-            // 
-            // cTag
-            // 
-            this.cTag.FillWeight = 50F;
-            this.cTag.HeaderText = "Tag:";
-            this.cTag.Name = "cTag";
-            this.cTag.ReadOnly = true;
-            // 
-            // cMessage
-            // 
-            this.cMessage.HeaderText = "Message:";
-            this.cMessage.Name = "cMessage";
-            this.cMessage.ReadOnly = true;
-            // 
-            // tpTree
-            // 
-            this.tpTree.Controls.Add(this.tvListNotes);
-            this.tpTree.Location = new System.Drawing.Point(4, 22);
-            this.tpTree.Name = "tpTree";
-            this.tpTree.Size = new System.Drawing.Size(770, 481);
-            this.tpTree.TabIndex = 1;
-            this.tpTree.Text = "tpTree";
-            this.tpTree.UseVisualStyleBackColor = true;
-            // 
-            // tvListNotes
-            // 
-            this.tvListNotes.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tvListNotes.Location = new System.Drawing.Point(0, 0);
-            this.tvListNotes.Name = "tvListNotes";
-            this.tvListNotes.ShowNodeToolTips = true;
-            this.tvListNotes.Size = new System.Drawing.Size(770, 481);
-            this.tvListNotes.TabIndex = 0;
-            this.tvListNotes.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.tvListNotes_AfterSelect);
-            this.tvListNotes.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.tvListNotes_NodeMouseClick);
-            this.tvListNotes.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.tvListNotes_NodeMouseDoubleClick);
+            this.msMainMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.miFile,
+            this.viewToolStripMenuItem,
+            this.editToolStripMenuItem,
+            this.aboutToolStripMenuItem});
+            this.msMainMenu.Location = new System.Drawing.Point(0, 0);
+            this.msMainMenu.Name = "msMainMenu";
+            this.msMainMenu.Size = new System.Drawing.Size(784, 24);
+            this.msMainMenu.TabIndex = 0;
+            this.msMainMenu.Text = "menuStrip1";
             // 
             // NotesOblitusApp
             // 
@@ -523,48 +523,21 @@ namespace NotesOblitus
             this.Shown += new System.EventHandler(this.NotesOblitusApp_Shown);
             this.VisibleChanged += new System.EventHandler(this.NotesOblitusApp_VisibleChanged);
             this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.NotesOblitusApp_KeyUp);
-            this.msMainMenu.ResumeLayout(false);
-            this.msMainMenu.PerformLayout();
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
-            this.msNotifyMenu.ResumeLayout(false);
             this.htcMainView.ResumeLayout(false);
             this.tpTable.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgListNotes)).EndInit();
             this.tpTree.ResumeLayout(false);
+            this.msNotifyMenu.ResumeLayout(false);
+            this.msMainMenu.ResumeLayout(false);
+            this.msMainMenu.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
 		}
 
 		#endregion
-
-		private System.Windows.Forms.MenuStrip msMainMenu;
-		private System.Windows.Forms.ToolStripMenuItem miFile;
-		private System.Windows.Forms.ToolStripMenuItem miFileOpen;
-		private System.Windows.Forms.ToolStripMenuItem miFileSave;
-		private System.Windows.Forms.ToolStripMenuItem miFileSaveAs;
-		private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-		private System.Windows.Forms.ToolStripMenuItem miFileRead;
-		private System.Windows.Forms.ToolStripMenuItem miFileRefresh;
-		private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
-		private System.Windows.Forms.ToolStripMenuItem miFileExport;
-		private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
-		private System.Windows.Forms.ToolStripMenuItem miFileExit;
-		private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem displayAsToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem miViewTable;
-		private System.Windows.Forms.ToolStripMenuItem miViewTree;
-		private System.Windows.Forms.ToolStripMenuItem miViewStatistics;
-		private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem miEditPreview;
-		private System.Windows.Forms.ToolStripMenuItem miEditEdit;
-		private System.Windows.Forms.ToolStripMenuItem miEditDelete;
-		private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
-		private System.Windows.Forms.ToolStripMenuItem miEditOptions;
-		private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem miAboutHelp;
-		private System.Windows.Forms.ToolStripMenuItem miAboutAbout;
 		private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
 		private System.Windows.Forms.TabPage tpTable;
 		private System.Windows.Forms.TabPage tpTree;
@@ -574,18 +547,44 @@ namespace NotesOblitus
 		private System.Windows.Forms.DataGridViewTextBoxColumn cTag;
 		private System.Windows.Forms.DataGridViewTextBoxColumn cMessage;
 		private System.Windows.Forms.TreeView tvListNotes;
-		private System.Windows.Forms.ToolStripMenuItem miExportXml;
-		private System.Windows.Forms.ToolStripMenuItem miExportJson;
 		private System.Windows.Forms.NotifyIcon niMainNotify;
 		private System.Windows.Forms.ContextMenuStrip msNotifyMenu;
 		private System.Windows.Forms.ToolStripMenuItem miNotifyAuto;
 		private System.Windows.Forms.ToolStripMenuItem miNotifyAbout;
 		private System.Windows.Forms.ToolStripMenuItem miNotifyExit;
-		private System.Windows.Forms.ToolStripMenuItem miFileAutoRefresh;
 		private TextBoxPlaceHolder tbInitialPath;
 		private HiddenTabControl htcMainView;
-		private System.Windows.Forms.ToolStripMenuItem miFileRecentProjects;
-		private System.Windows.Forms.ToolStripMenuItem miFileRecentSearches;
-	}
+        private System.Windows.Forms.ToolStripMenuItem miFile;
+        private System.Windows.Forms.ToolStripMenuItem miFileOpen;
+        private System.Windows.Forms.ToolStripMenuItem miFileSave;
+        private System.Windows.Forms.ToolStripMenuItem miFileSaveAs;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem miFileRead;
+        private System.Windows.Forms.ToolStripMenuItem miFileRefresh;
+        private System.Windows.Forms.ToolStripMenuItem miFileAutoRefresh;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripMenuItem miFileExport;
+        private System.Windows.Forms.ToolStripMenuItem miExportXml;
+        private System.Windows.Forms.ToolStripMenuItem miExportJson;
+        private System.Windows.Forms.ToolStripMenuItem miFileRecentProjects;
+        private System.Windows.Forms.ToolStripMenuItem miFileRecentSearches;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
+        private System.Windows.Forms.ToolStripMenuItem miFileExit;
+        private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem displayAsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem miViewTable;
+        private System.Windows.Forms.ToolStripMenuItem miViewTree;
+        private System.Windows.Forms.ToolStripMenuItem miViewStatistics;
+        private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem miEditPreview;
+        private System.Windows.Forms.ToolStripMenuItem miEditEdit;
+        private System.Windows.Forms.ToolStripMenuItem miEditDelete;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
+        private System.Windows.Forms.ToolStripMenuItem miEditOptions;
+        private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem miAboutHelp;
+        private System.Windows.Forms.ToolStripMenuItem miAboutAbout;
+        private System.Windows.Forms.MenuStrip msMainMenu;
+    }
 }
 
