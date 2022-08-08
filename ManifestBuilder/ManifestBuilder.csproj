@@ -85,7 +85,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>if $(ConfigurationName) == Debug "$(SolutionDir)VersionUpdater\bin\Release\VersionUpdater.exe" "$(SolutionDir)GlobalVars.cs" ManifestBuilderVersion</PreBuildEvent>
+    <PreBuildEvent>if $(ConfigurationName) == Debug "$(SolutionDir)VersionUpdater\bin\Debug\VersionUpdater.exe" "$(SolutionDir)GlobalVars.cs" ManifestBuilderVersion</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
